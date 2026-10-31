@@ -498,8 +498,14 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.banner.setScaleY(focused && advancedEffects ? 1.035f : 1f);
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
-        h.card.setBackground(auroraFloating ? null
-                : e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
+        if (auroraFloating) {
+            AuroraGlassCard tile = new AuroraGlassCard(AuroraFloatingLogo.accentForPackage(e.pkg));
+            tile.setSelected(focused);
+            h.card.setBackground(tile);
+        } else {
+            h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE
+                    ? null : h.cardBackground);
+        }
         if (uniformTiles && e.banner == null) {
             if (e.backdrop == null) {
                 int[] branded = auroraPlatformBackdrop(e.pkg);
@@ -990,6 +996,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 Drawable art = banner.getDrawable();
                 if (art instanceof AuroraFloatingLogo) {
                     ((AuroraFloatingLogo) art).setFocused(focused);
+                }
+                if (view.getBackground() instanceof AuroraGlassCard) {
+                    ((AuroraGlassCard) view.getBackground()).setSelected(focused);
                 }
                 view.animate().cancel();
                 banner.animate().cancel();
