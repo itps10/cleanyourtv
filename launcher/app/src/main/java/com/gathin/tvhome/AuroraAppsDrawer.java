@@ -223,6 +223,9 @@ final class AuroraAppsDrawer {
 
     void close() { close(true); }
 
+    /** HOME button restores the seven favourites, without focus jumping back later. */
+    void dismissForHome() { close(false); }
+
     private void close(boolean returnFocus) {
         if (closed) return;
         closed = true;
@@ -253,7 +256,7 @@ final class AuroraAppsDrawer {
             item.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
             item.setPadding(dp(3), dp(6), dp(3), dp(9));
             item.setClipChildren(false);
-            RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(-1, tileSide + dp(42));
+            RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(-1, tileSide + dp(54));
             item.setLayoutParams(lp);
 
             FrameLayout button = new FrameLayout(activity);
