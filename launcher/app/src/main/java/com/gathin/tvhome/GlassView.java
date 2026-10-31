@@ -59,9 +59,10 @@ public class GlassView extends View {
             glowRgb = (r << 16) | (g << 8) | b;
             glowAlpha = 0x90;
             // The rim is the accent lifted towards white, so the edge still reads as glass, not paint.
-            int r = (((glowRgb >> 16) & 0xFF) + 255 * 2) / 3, g = (((glowRgb >> 8) & 0xFF) + 255 * 2) / 3,
-                    b = ((glowRgb & 0xFF) + 255 * 2) / 3;
-            rim.setColor(0xE6000000 | (r << 16) | (g << 8) | b);
+            int rimR = (((glowRgb >> 16) & 0xFF) + 255 * 2) / 3;
+            int rimG = (((glowRgb >> 8) & 0xFF) + 255 * 2) / 3;
+            int rimB = ((glowRgb & 0xFF) + 255 * 2) / 3;
+            rim.setColor(0xE6000000 | (rimR << 16) | (rimG << 8) | rimB);
         }
         invalidate();
     }
