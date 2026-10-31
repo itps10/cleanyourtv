@@ -36,8 +36,8 @@ final class AuroraGlassCard extends Drawable {
     private RadialGradient darkCentre;
     private LinearGradient strip;
 
-    AuroraGlassCard(String pkg) {
-        accent = AuroraFloatingLogo.accentForPackage(pkg);
+    AuroraGlassCard(String pkg, int brandTint) {
+        accent = brandTint | 0xFF000000;
         if ("com.netflix.ninja".equals(pkg)) {
             kind = 1;
             top = 0xFF5C0829; bottom = 0xFF100816; edgeAccent = 0xFFFF2443;
@@ -67,7 +67,9 @@ final class AuroraGlassCard extends Drawable {
             top = 0xFF954023; bottom = 0xFF29102E; edgeAccent = 0xFFFF8C57;
         } else {
             kind = 0;
-            top = 0xFF34206D; bottom = 0xFF0C0E28; edgeAccent = 0xFFAA71FF;
+            // Unknown app: keep the Aurora dark glass, but tint its edge
+            // from Android's actual app icon instead of generic purple.
+            top = 0xFF24213A; bottom = 0xFF0C0E28; edgeAccent = accent;
         }
     }
 
