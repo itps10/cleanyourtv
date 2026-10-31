@@ -1776,7 +1776,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // cinematic_white_focus). app_glow: every tile. In a single row every tile is the dock's kind.
         boolean coloured = (appGlow || cinematic && !cinematicWhiteFocus && (singleRow || position < COLUMNS)) && !festive;
         int accent = coloured ? (singleRow
-                ? AuroraFloatingLogo.accentForPackage(adapter.packageAt(position))
+                ? adapter.auroraAppColorAt(position)
                 : adapter.ambientColorAt(position)) : 0;
         if ((cinematic || appGlow) && !festive && accent != glassAccent) {
             glassAccent = accent;
@@ -1872,7 +1872,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void showHero(int position, float dockTopInRoot) {
         String label = adapter.labelAt(position);
         int color = singleRow
-                ? AuroraFloatingLogo.accentForPackage(adapter.packageAt(position))
+                ? adapter.auroraAppColorAt(position)
                 : adapter.ambientColorAt(position);
         float y = dockTopInRoot - 14 * density - 26 * density - hero.getHeight();
         boolean changed = !label.contentEquals(heroName.getText());
@@ -2127,9 +2127,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 // Aurora Chromatic: a photo-preserving colour wash behind the dock and hero.
                 // One 480x270 mask, created once, then re-tinted as selection changes.
                 paint.setShader(new RadialGradient(
-                        w * 0.44f, h * 0.43f, w * 0.81f,
-                        new int[]{0xBCFFFFFF, 0x70FFFFFF, 0x08FFFFFF, 0x00FFFFFF},
-                        new float[]{0f, 0.44f, 0.82f, 1f}, Shader.TileMode.CLAMP));
+                        w * 0.33f, h * 0.46f, w * 0.99f,
+                        // Saturated shadow across the mountain and lake, feathered outward
+                        // so the wallpaper remains visible even under red/blue/violet.
+                        new int[]{0xBAFFFFFF, 0x65FFFFFF, 0x20FFFFFF, 0x00FFFFFF},
+                        new float[]{0f, 0.39f, 0.78f, 1f}, Shader.TileMode.CLAMP));
             } else if (Config.GLOW_HORIZON.equals(glowStyle)) {
                 // The colour washes down from the top edge and fades out three quarters of the way down,
                 // with a brighter band along the top like light over a horizon.
