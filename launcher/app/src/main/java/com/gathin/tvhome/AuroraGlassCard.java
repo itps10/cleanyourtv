@@ -72,8 +72,12 @@ final class AuroraGlassCard extends Drawable {
         if (b.isEmpty()) return;
         float cx = b.exactCenterX(), cy = b.exactCenterY();
         float r = Math.min(b.width(), b.height()) * 0.5f;
+        // iPhone-dark-inspired circular backing: charcoal with a whisper of
+        // the app colour rather than a brightly coloured opaque ball.
+        int darkTop = mix(0xFF090A12, top, 0.17f);
+        int darkBottom = mix(0xFF070912, bottom, 0.14f);
         base = new LinearGradient(b.left, b.top, b.right, b.bottom,
-                new int[]{top, mix(top, bottom, 0.67f), bottom},
+                new int[]{darkTop, mix(darkTop, darkBottom, 0.62f), darkBottom},
                 new float[]{0f, 0.52f, 1f}, Shader.TileMode.CLAMP);
         aura = new RadialGradient(cx + 0.29f*r, cy - 0.47f*r, r*1.45f,
                 new int[]{a(tint, 0x8B), a(tint, 0x35), a(tint,0)},
@@ -92,23 +96,16 @@ final class AuroraGlassCard extends Drawable {
         paint.setShader(base);
         c.drawCircle(cx,cy,radius,paint);
         paint.setShader(aura);
+        paint.setAlpha(selected ? 220 : 54);
         c.drawCircle(cx,cy,radius,paint);
+        paint.setAlpha(255);
         paint.setShader(shadow);
         c.drawCircle(cx,cy,radius,paint);
         paint.setShader(null);
 
         // Coloured focus ring; idle badges keep a narrow subtle outline.
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(selected ? Math.max(3.1f, radius*.065f)
-                : Math.max(1.2f,radius*.024f));
-        paint.setColor(a(tint, selected ? 255 : 158));
-        c.drawCircle(cx,cy,radius-paint.getStrokeWidth()*0.52f,paint);
-
-        // A small satin arc suggests glossy glass, without a blur pass.
-        arc.set(cx-radius*.83f,cy-radius*.83f,cx+radius*.83f,cy+radius*.83f);
-        paint.setStrokeWidth(Math.max(.7f,radius*.025f));
-        paint.setColor(selected ? 0xABFFFFFF : 0x5CFFFFFF);
-        c.drawArc(arc,207,111,false,paint);
+        // The actual focus outline is painted above the icon by AuroraOrbitRim.
+        // No thin purple ring (or white reflection) is drawn on idle icons.
         paint.setStyle(Paint.Style.FILL);
     }
 
