@@ -8,9 +8,10 @@ on:
       - 'launcher/**'
       - 'themes/aurora-purple-philco/**'
       - 'themes/aurora-floating-philco/**'
+      - 'scripts/aurora-cinema-signature-v11/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -45,3 +46,26 @@ jobs:
           name: Aurora-Cinema-v11-APK
           path: launcher/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+      - name: Preparar download direto (APK e papel de parede)
+        if: github.ref == 'refs/heads/aurora-cinema-signature-v11'
+        shell: bash
+        run: |
+          cp launcher/app/build/outputs/apk/release/app-release.apk aurora-cinema-v11.apk
+          python3 -m pip install --quiet pillow
+          python3 scripts/aurora-cinema-signature-v11/generate_wallpaper.py
+          ls -lh aurora-cinema-v11.apk aurora_montanhas_lago_sem_interface.jpg
+      - name: Publicar release para curl no Termux
+        if: github.ref == 'refs/heads/aurora-cinema-signature-v11'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: aurora-cinema-signature-v11
+          target_commitish: ${{ github.sha }}
+          name: Aurora Cinema Signature v1.1 — download direto
+          body: |
+            APK separado (com.gathin.tvhome.aurora.cinema) e wallpaper de montanhas e lago,
+            sem widgets ou textos embutidos na imagem.
+            Ambos podem ser baixados pelo Termux via HTTPS sem depender do ZIP do ChatGPT.
+          files: |
+            aurora-cinema-v11.apk
+            aurora_montanhas_lago_sem_interface.jpg
+          fail_on_unmatched_files: true
