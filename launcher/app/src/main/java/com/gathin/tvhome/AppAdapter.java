@@ -235,7 +235,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.animations = cfg.animations;
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
         this.showHomeSettings = cfg.showHomeSettingsShortcut;
-        this.showLibrary = LibraryApps.showPill(cfg.appLibrary, cfg.libraryButton, cfg.showLibraryPill);
+        // In Aurora, the top Apps button and DOWN key open the vertical drawer;
+        // do not add a horizontal library footer to the seven favourite circles.
+        this.showLibrary = !(cfg.singleRow && !cfg.uniformTiles)
+                && LibraryApps.showPill(cfg.appLibrary, cfg.libraryButton, cfg.showLibraryPill);
         this.reducedMotion = cfg.reducedMotion;
         this.focusOvershoot = cfg.focusOvershoot;
         this.rowsBelowDock = cfg.rowsBelowDock;
@@ -289,6 +292,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         for (ResolveInfo ri : found) {
             if (ri.activityInfo == null) continue;
             String pkg = ri.activityInfo.packageName;
+            // This home row deliberately contains ONLY the seven pinned apps.
+            // Previously all installed launchers were appended horizontally,
+            // including older "Início" builds of our own Aurora.
+            if (auroraFloating && (!favourites.contains(pkg)
+                    || pkg.startsWith("com.gathin.tvhome")
+                    || pkg.equals("com.google.android.tvlauncher"))) continue;
             if (pkg.equals(ctx.getPackageName()) || !ri.activityInfo.exported
                     || !LibraryApps.visible(tvPackages.contains(pkg), hidden.contains(pkg), added.contains(pkg), removed.contains(pkg))) continue;
             ComponentName component = new ComponentName(pkg, ri.activityInfo.name);
