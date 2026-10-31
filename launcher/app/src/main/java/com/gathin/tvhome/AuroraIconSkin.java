@@ -22,7 +22,7 @@ import java.util.Locale;
  * except for the two user-requested TV/film fallback icons.
  */
 final class AuroraIconSkin {
-    static final int SIZE = 144;
+    static final int SIZE = 256; // high-resolution 256x256 icon atlas, cached per app
     private AuroraIconSkin() {}
 
     static final class Result {
@@ -41,7 +41,7 @@ final class AuroraIconSkin {
         Bitmap source = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(source);
         if (original == null) original = context.getDrawable(android.R.drawable.sym_def_app_icon);
-        Rect old = original.getBounds();
+        Rect old = new Rect(original.getBounds()); // snapshot: avoid mutating Drawable's bounds
         original.setBounds(0, 0, SIZE, SIZE);
         original.draw(canvas);
         original.setBounds(old);
@@ -79,7 +79,10 @@ final class AuroraIconSkin {
             }
         }
         Bitmap output = Bitmap.createBitmap(pixels, SIZE, SIZE, Bitmap.Config.ARGB_8888);
-        return new Result(new BitmapDrawable(context.getResources(), output), accent);
+        BitmapDrawable sharp = new BitmapDrawable(context.getResources(), output);
+        sharp.setFilterBitmap(true);
+        sharp.setDither(true);
+        return new Result(sharp, accent);
     }
 
     private static int blend(int a, int b, float t) {
@@ -108,10 +111,10 @@ final class AuroraIconSkin {
     private static int dominantInk(int[] p, int bg, int fallback) {
         float best = -1f;
         int colour = fallback;
-        for(int i=0;i<p.length;i+=17) {
+        float[] hsv = new float[3]; // reuse array; reduce GC during drawer scrolling
+        for(int i=0;i<p.length;i+=23) {
             int c=p[i]; if(Color.alpha(c)<195)continue;
             if(bg!=0&&distance(c,bg)<55)continue;
-            float[] hsv=new float[3];
             Color.colorToHSV(c,hsv);
             float score=hsv[1] * (0.7f + hsv[2]*0.3f);
             if(score>best && hsv[2] > 0.21f) { best=score; colour=c|0xFF000000; }
@@ -133,6 +136,7 @@ final class AuroraIconSkin {
     private static Result drawSpecial(Context context,int kind,int accent) {
         Bitmap bmp=Bitmap.createBitmap(SIZE,SIZE,Bitmap.Config.ARGB_8888);
         Canvas c=new Canvas(bmp);
+        c.scale(SIZE / 144f, SIZE / 144f); // render original vector art at 256px
         Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(kind==1?0xFF0B2130:0xFF231825);
         c.drawCircle(72,72,72,p);
@@ -165,6 +169,9 @@ final class AuroraIconSkin {
             Path play=new Path();play.moveTo(64,57);play.lineTo(64,89);
             play.lineTo(92,73);play.close();c.drawPath(play,p);
         }
-        return new Result(new BitmapDrawable(context.getResources(),bmp),accent);
+        BitmapDrawable sharp = new BitmapDrawable(context.getResources(), bmp);
+        sharp.setFilterBitmap(true);
+        sharp.setDither(true);
+        return new Result(sharp, accent);
     }
 }
