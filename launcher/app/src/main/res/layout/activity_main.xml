@@ -469,6 +469,22 @@
             android:fontFamily="@string/font_medium" />
     </LinearLayout>
 
+    <!-- Non-interactive hint: Down on any circular favorite opens installed apps. -->
+    <TextView
+        android:id="@+id/auroraAppsHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="14dp"
+        android:text="↓  TODOS OS APPS"
+        android:textColor="#D9DECAFC"
+        android:textSize="12sp"
+        android:letterSpacing="0.16"
+        android:fontFamily="@string/font_medium"
+        android:focusable="false"
+        android:clickable="false"
+        android:importantForAccessibility="no" />
+
     <!-- The single floating glass highlight that springs between tiles. -->
     <com.gathin.tvhome.GlassView
         android:id="@+id/glass"
