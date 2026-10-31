@@ -297,8 +297,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     appLabels.containsKey(pkg) ? appLabels.get(pkg) : String.valueOf(ri.loadLabel(pm)), pkg);
             if (!seen.add(pkg + '\n' + label)) continue;
             Drawable banner = null;
-            // uniform_tiles draws the icon, so an app's banner is never loaded. A module card keeps its banner.
-            if (!(uniformTiles && card == null)) {
+            // Aurora: curated, vector-drawn platform tiles supersede the app's original
+            // icon whenever uniform_tiles is enabled. Unrecognised apps keep the native icon.
+            // Module cards keep their own content and rendering rules.
+            if (uniformTiles && card == null) {
+                banner = AuroraBrandBanner.forPackage(pkg);
+            } else {
                 banner = bundledBanner(appBanners.get(pkg));
                 if (banner == null) banner = iconTiles.contains(pkg) ? iconBanner(ri.loadIcon(pm)) : loadBanner(pm, ri);
             }
