@@ -148,6 +148,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** The top shelf: heroName, plus the cinematic shelf's "Last opened" line and dock position dots. */
     private View hero;
     private TextView heroMeta;
+    /** Non-modal music quick-peek, visible only when the YouTube Music tile is focused. */
+    private View auroraMusicPeek;
     private LinearLayout heroDots;
     /** Cinematic top shelf (config.xml, cinematic_home): the focused dock app's artwork behind a larger shelf. */
     private boolean cinematic;
@@ -500,6 +502,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // shelf would render it through an offscreen buffer first, as the glow above notes.
         hero.forceHasOverlappingRendering(false);
         heroMeta = findViewById(R.id.heroMeta);
+        auroraMusicPeek = findViewById(R.id.auroraMusicPeek);
         heroDots = findViewById(R.id.heroDots);
         heroArt = findViewById(R.id.heroArt);
         cinematic = cfg.cinematicHome;
@@ -1736,6 +1739,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     public void onTileFocused(int position, View card) {
         lastFocused = position;
         lastFocusedKey = adapter.keyAt(position);
+        updateAuroraMusicPeek(position);
         // Focus restored before the first layout (cold start): the tile has no size yet, and the glass
         // would be sized to 2*pad. Run again once the tile is laid out.
         if (card.getWidth() == 0) {
@@ -1816,6 +1820,34 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             // Scroll just enough so the whole glass (not only the tile) is visible.
             revealRect.set(0, -(int) pad * 2, item.getWidth(), item.getHeight() + (int) pad);
             grid.requestChildRectangleOnScreen(item, revealRect, reducedMotion);
+        }
+    }
+
+    /**
+     * The YouTube Music popup is a passive preview, not a fake playback controller.
+     * It never asks for notification access or interrupts D-pad focus.
+     */
+    private void updateAuroraMusicPeek(int position) {
+        if (auroraMusicPeek == null) return;
+        String pkg = adapter.packageAt(position);
+        boolean music = "com.google.android.youtube.tvmusic".equals(pkg)
+                || "com.google.android.apps.youtube.music".equals(pkg);
+        auroraMusicPeek.animate().cancel();
+        if (music) {
+            if (auroraMusicPeek.getVisibility() != View.VISIBLE) {
+                auroraMusicPeek.setAlpha(0f);
+                auroraMusicPeek.setTranslationY(12f * density);
+                auroraMusicPeek.setVisibility(View.VISIBLE);
+            }
+            auroraMusicPeek.animate().alpha(1f).translationY(0f)
+                    .setDuration(reducedMotion ? 0 : 240).start();
+        } else if (auroraMusicPeek.getVisibility() == View.VISIBLE) {
+            auroraMusicPeek.animate().alpha(0f).translationY(8f * density)
+                    .setDuration(reducedMotion ? 0 : 140)
+                    .withEndAction(() -> {
+                        if (auroraMusicPeek.getAlpha() < 0.1f)
+                            auroraMusicPeek.setVisibility(View.GONE);
+                    }).start();
         }
     }
 
