@@ -1719,9 +1719,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         libraryFocusPending = false;
         libraryFromTopBar = false;
         libraryFromVpnPill = false;
+        libraryFromOrbitDown = false;
         appLibrary = new AppLibraryDialog(this, animations, reducedMotion, appLibrarySelection, libraryOkOpens, adapter::containsPackage, () -> reloadApps(false), () -> {
             appLibrary = null;
             openPopup = null;
+            if (libraryFromOrbitDown) {
+                libraryFromOrbitDown = false;
+                final int target = orbitReturnPosition;
+                grid.post(() -> {
+                    if (hasWindowFocus() && !isFinishing()) focusTile(target);
+                });
+                return;
+            }
             if (libraryFromTopBar) {
                 libraryFromTopBar = false;
                 btnLibraryTop.requestFocus();
@@ -2443,10 +2452,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int count = adapter.appCount();
         int target;
         if (singleRow) {
-            // One row: Up leaves for the top bar, Down has nowhere to go, and Left/Right walk the whole row,
-            // stopping at its two ends (the default focus search scrolls the row to the next tile).
+            // Orbit: Up reaches Inputs/Wi-Fi/Apps/Settings; Down opens ALL launchable
+            // installed apps in the existing AppLibraryDialog without navigating
+            // away from Home or requiring the toolbar's Apps button.
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return false;
-            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) return true;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                if (appLibraryEnabled && appLibrary == null) {
+                    orbitReturnPosition = position;
+                    onLibraryRequested();
+                    libraryFromOrbitDown = true;
+                    grid.playSoundEffect(SoundEffectConstants.NAVIGATION_DOWN);
+                }
+                return true;
+            }
             boolean forward = rtlAppGrid ? keyCode == KeyEvent.KEYCODE_DPAD_LEFT : keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
             int last = adapter.focusablePosition(count - 1);
             if (forward && position >= last) {
@@ -3007,6 +3025,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private View btnLibraryTop;
     /** The open library came from that button: closing it returns there instead of scrolling to the grid's end. */
     private boolean libraryFromTopBar;
+    /** When the library is opened with Down on an Orbit card, Back returns to that card. */
+    private boolean libraryFromOrbitDown;
+    private int orbitReturnPosition;
     /** The open library came from the VPN pill (vpn_pill, no VPN app): closing it returns there while the pill still shows. */
     private boolean libraryFromVpnPill;
 
