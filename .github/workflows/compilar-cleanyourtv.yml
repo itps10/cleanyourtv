@@ -1,14 +1,15 @@
-name: Compilar Aurora Cinema Signature v1.1
+name: Compilar Aurora Orbit v1.2 (APK independente)
 on:
   workflow_dispatch:
   push:
-    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06, aurora-floating-sidebyside-v06, aurora-chromatic-v07, aurora-luxe-v08, aurora-neon-cards-v09, aurora-native-logos-v10, aurora-cinema-signature-v11]
+    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06, aurora-floating-sidebyside-v06, aurora-chromatic-v07, aurora-luxe-v08, aurora-neon-cards-v09, aurora-native-logos-v10, aurora-cinema-signature-v11, aurora-orbit-v12]
     paths:
       - '.github/workflows/compilar-cleanyourtv.yml'
       - 'launcher/**'
       - 'themes/aurora-purple-philco/**'
       - 'themes/aurora-floating-philco/**'
       - 'scripts/aurora-cinema-signature-v11/**'
+      - 'scripts/aurora-orbit-v12/**'
 
 permissions:
   contents: write
@@ -39,33 +40,33 @@ jobs:
         run: |
           cd launcher
           chmod +x gradlew
-          ./gradlew --no-daemon --console=plain -PlauncherApplicationId=com.gathin.tvhome.aurora.cinema assembleRelease
+          ./gradlew --no-daemon --console=plain -PlauncherApplicationId=com.gathin.tvhome.aurora.orbit assembleRelease
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: Aurora-Cinema-v11-APK
+          name: Aurora-Orbit-v12-APK
           path: launcher/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
       - name: Preparar download direto (APK e papel de parede)
-        if: github.ref == 'refs/heads/aurora-cinema-signature-v11'
+        if: github.ref == 'refs/heads/aurora-orbit-v12'
         shell: bash
         run: |
-          cp launcher/app/build/outputs/apk/release/app-release.apk aurora-cinema-v11.apk
+          cp launcher/app/build/outputs/apk/release/app-release.apk aurora-orbit-v12.apk
           python3 -m pip install --quiet pillow
           python3 scripts/aurora-cinema-signature-v11/generate_wallpaper.py
-          ls -lh aurora-cinema-v11.apk aurora_montanhas_lago_sem_interface.jpg
+          ls -lh aurora-orbit-v12.apk aurora_montanhas_lago_sem_interface.jpg
       - name: Publicar release para curl no Termux
-        if: github.ref == 'refs/heads/aurora-cinema-signature-v11'
+        if: github.ref == 'refs/heads/aurora-orbit-v12'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: aurora-cinema-signature-v11
+          tag_name: aurora-orbit-v12
           target_commitish: ${{ github.sha }}
-          name: Aurora Cinema Signature v1.1 — download direto
+          name: Aurora Orbit v1.2 — download direto
           body: |
-            APK separado (com.gathin.tvhome.aurora.cinema) e wallpaper de montanhas e lago,
+            APK separado (com.gathin.tvhome.aurora.orbit) e wallpaper de montanhas e lago,
             sem widgets ou textos embutidos na imagem.
             Ambos podem ser baixados pelo Termux via HTTPS sem depender do ZIP do ChatGPT.
           files: |
-            aurora-cinema-v11.apk
+            aurora-orbit-v12.apk
             aurora_montanhas_lago_sem_interface.jpg
           fail_on_unmatched_files: true
