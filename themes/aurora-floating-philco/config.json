@@ -1,13 +1,14 @@
 {
   "locale": "pt-BR",
   "clock_format": "24",
-  "columns": 5,
+  "columns": 6,
   "dock_apps": [
     "com.netflix.ninja",
     "com.amazon.amazonvideo.livingroom",
     "com.disney.disneyplus",
     "com.wbd.stream",
-    "com.google.android.youtube.tv"
+    "com.google.android.youtube.tv",
+    "com.google.android.youtube.tvmusic"
   ],
   "fill_dock": false,
   "library_apps": [
@@ -18,9 +19,9 @@
     "com.mediatek.wwtv.tvcenter"
   ],
   "live_tv_package": "com.mediatek.wwtv.tvcenter",
-  "background_color": "#080815",
-  "wallpaper": true,
-  "wallpaper_dim": 15,
+  "background_color": "#09071A",
+  "wallpaper": false,
+  "wallpaper_dim": 0,
   "wallpaper_true_color": false,
   "single_row": true,
   "dock_row": true,
@@ -55,5 +56,6 @@
   "tile_menu": true,
   "home_idle_clock_minutes": 8,
   "show_stats": false,
-  "date_below_clock": false
+  "date_below_clock": false,
+  "sky_intensity": 0
 }
