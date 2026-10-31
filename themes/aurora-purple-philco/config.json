@@ -1,0 +1,59 @@
+{
+  "locale": "pt-BR",
+  "clock_format": "24",
+  "columns": 4,
+  "dock_apps": [
+    "com.netflix.ninja",
+    "com.amazon.amazonvideo.livingroom",
+    "com.disney.disneyplus",
+    "com.wbd.stream"
+  ],
+  "fill_dock": false,
+  "library_apps": [
+    "com.google.android.youtube.tv",
+    "com.globo.globotv",
+    "com.spotify.tv.android",
+    "com.boosteroidtv.streaming"
+  ],
+  "hidden_apps": [
+    "com.mediatek.wwtv.tvcenter"
+  ],
+  "library_excluded_apps": [
+    "mediatek.factorymenu.ui",
+    "com.mediatek.tv.factory",
+    "com.android.tv.ota"
+  ],
+  "live_tv_package": "com.mediatek.wwtv.tvcenter",
+  "background_color": "#0A0519",
+  "wallpaper": false,
+  "dock_row": true,
+  "dock_glass": true,
+  "dock_opacity": 58,
+  "dock_title": true,
+  "rows_below_dock": 1,
+  "uniform_tiles": true,
+  "always_show_names": false,
+  "icon_only_buttons": true,
+  "show_network_pill": true,
+  "show_inputs_pill": true,
+  "cinematic_home": true,
+  "cinematic_scrim": 100,
+  "cinematic_art": 0,
+  "cinematic_dots": false,
+  "ambient_glow": false,
+  "app_glow": true,
+  "glow_style": "radial",
+  "glass_style": "halo",
+  "focus_overshoot": false,
+  "advanced_effects": true,
+  "animations": true,
+  "reduced_motion": false,
+  "fade_rows": false,
+  "app_library": true,
+  "library_button": true,
+  "tile_menu": true,
+  "home_idle_clock_minutes": 6,
+  "show_stats": false,
+  "cinematic_white_focus": false,
+  "date_below_clock": false
+}
