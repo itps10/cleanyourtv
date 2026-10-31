@@ -46,13 +46,18 @@ public class GlassView extends View {
 
     /** Tints the rim and the outer glow; 0 restores the plain white glass. */
     void setAccent(int argb) {
+        // Aurora Purple: an always-violet spotlight still takes a subtle tint from each app.
+        // A single hardware-cached slab follows focus; no blur shader, video or polling.
         if (argb == 0) {
-            glowRgb = 0xFFFFFF;
-            glowAlpha = 0x30;
-            rim.setColor(0xCCFFFFFF);
+            glowRgb = 0xA66BFF;
+            glowAlpha = 0x72;
+            rim.setColor(0xE6CDB1FF);
         } else {
-            glowRgb = argb & 0xFFFFFF;
-            glowAlpha = 0x70;
+            int r = Math.round(0.75f * 166 + 0.25f * ((argb >> 16) & 0xFF));
+            int g = Math.round(0.75f * 107 + 0.25f * ((argb >> 8) & 0xFF));
+            int b = Math.round(0.75f * 255 + 0.25f * (argb & 0xFF));
+            glowRgb = (r << 16) | (g << 8) | b;
+            glowAlpha = 0x90;
             // The rim is the accent lifted towards white, so the edge still reads as glass, not paint.
             int r = (((glowRgb >> 16) & 0xFF) + 255 * 2) / 3, g = (((glowRgb >> 8) & 0xFF) + 255 * 2) / 3,
                     b = ((glowRgb & 0xFF) + 255 * 2) / 3;
