@@ -97,7 +97,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 
-    static final float FOCUS_SCALE = 1.23f;
+    static final float FOCUS_SCALE = 1.14f;
     /** Design size of a tile (dp); tiles shrink from here when the columns don't fit, see tileWidthPx. */
     static final float DESIGN_W_DP = 180f, DESIGN_H_DP = 180f;
 
@@ -340,6 +340,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
                 }
             }
+            // One-time local dark icon treatment: preserve the original coloured
+            // emblem, darken flat square backgrounds. No APKs are modified.
+            if (auroraFloating && card == null && icon != null) {
+                icon = AuroraIconSkin.forApp(ctx, pkg, label, icon).icon;
+            }
             if (auroraFloating && card == null) {
                 android.util.Log.i("AuroraArtwork",
                         pkg + " banner=" + (banner != null) + " icon=" + (icon != null)
@@ -455,7 +460,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         float density = parent.getResources().getDisplayMetrics().density;
         int width = parent.getWidth() > 0 ? parent.getWidth() : parent.getMeasuredWidth();
         int inner = width - parent.getPaddingLeft() - parent.getPaddingRight();
-        int w = tileWidthPx(inner, parent.getHeight(), dockSize, rowsBelowDock, dockTitle, dockRow, density), h = tileHeightPx(w);
+        int w = tileWidthPx(inner, parent.getHeight(), dockSize, rowsBelowDock, dockTitle, dockRow, density);
+        if (auroraFloating) w = Math.round(w * 0.88f); // smaller Orbit circles, no top clipping
+        int h = tileHeightPx(w);
         View card = v.findViewById(R.id.card);
         ViewGroup.LayoutParams cardLp = card.getLayoutParams();
         cardLp.width = w;
@@ -763,7 +770,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     float focusScale() {
-        return !animations ? 1f : auroraFloating ? 1.23f : advancedEffects ? 1.12f : 1.10f;
+        return !animations ? 1f : auroraFloating ? 1.14f : advancedEffects ? 1.12f : 1.10f;
     }
 
     /** A vivid colour sampled from the app's banner (or icon), cached per entry; a card's accent when it set one. */
@@ -1075,7 +1082,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 view.animate().cancel();
                 banner.animate().cancel();
                 name.animate().cancel();
-                float scale = !animations ? 1f : auroraFloating ? 1.23f : advancedEffects ? 1.12f : 1.10f;
+                float scale = !animations ? 1f : auroraFloating ? 1.14f : advancedEffects ? 1.12f : 1.10f;
                 float s = focused ? scale : 1f;
                 if (!animations) {
                     view.setScaleX(1f);
