@@ -58,9 +58,9 @@ final class AuroraAppsDrawer {
     private final TextView countView;
     private final Runnable afterClose;
     private final AppGrid adapter = new AppGrid();
-    /** ~72 icon bitmaps maximum, reused when the user scrolls vertically. */
+    /** At 256x256, keep at most 28 icons (~7 MB) on this 1.3 GB RAM television. */
     private final android.util.LruCache<String, AuroraIconSkin.Result> darkIconCache =
-            new android.util.LruCache<>(72);
+            new android.util.LruCache<>(28);
     private boolean closed;
     private final int tileSide;
     private final int densityWidth;
@@ -85,8 +85,8 @@ final class AuroraAppsDrawer {
         float density = activity.getResources().getDisplayMetrics().density;
         densityWidth = activity.getResources().getDisplayMetrics().widthPixels;
         int available = densityWidth - Math.round(100 * density);
-        tileSide = Math.min(Math.round(82 * density), Math.max(Math.round(46 * density),
-                available / COLS - Math.round(16 * density)));
+        tileSide = Math.min(Math.round(70 * density), Math.max(Math.round(42 * density),
+                available / COLS - Math.round(22 * density)));
 
         panel = new FrameLayout(activity);
         GradientDrawable backdrop = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
@@ -124,7 +124,8 @@ final class AuroraAppsDrawer {
         grid.setClipChildren(false);
         grid.setClipToPadding(false);
         grid.setHasFixedSize(true);
-        grid.setPadding(0, dp(5), 0, dp(24));
+        // Room for the focus animation: otherwise the top row is cropped.
+        grid.setPadding(0, dp(22), 0, dp(34));
         grid.setItemAnimator(null);
         grid.setAdapter(adapter);
         content.addView(grid, new LinearLayout.LayoutParams(-1, 0, 1));
@@ -164,6 +165,7 @@ final class AuroraAppsDrawer {
         PackageManager pm = activity.getPackageManager();
         LOADER.execute(() -> {
             Map<String, App> apps = new LinkedHashMap<>();
+            boolean hasTvAberta = false; // show only one TV Aberta entry
             for (String category : new String[]{
                     Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER}) {
                 Intent query = new Intent(Intent.ACTION_MAIN).addCategory(category);
@@ -176,6 +178,18 @@ final class AuroraAppsDrawer {
                         name = String.valueOf(ri.loadLabel(pm));
                     } catch (RuntimeException err) {
                         name = pkg;
+                    }
+                    // Some television firmware exposes TV Aberta under multiple
+                    // packages/activities. Keep the first TV-launchable entry;
+                    // don't uninstall or disable any of the underlying apps.
+                    String key = java.text.Normalizer.normalize(name,
+                            java.text.Normalizer.Form.NFD)
+                            .replaceAll("\\p{M}+", "")
+                            .toLowerCase(Locale.ROOT)
+                            .replace(" ", "").trim();
+                    if ("tvaberta".equals(key)) {
+                        if (hasTvAberta) continue;
+                        hasTvAberta = true;
                     }
                     apps.put(pkg, new App(ri, name,
                             category.equals(Intent.CATEGORY_LEANBACK_LAUNCHER)));
@@ -257,9 +271,10 @@ final class AuroraAppsDrawer {
             LinearLayout item = new LinearLayout(activity);
             item.setOrientation(LinearLayout.VERTICAL);
             item.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
-            item.setPadding(dp(3), dp(6), dp(3), dp(9));
+            // Inset selected circles from row edges so the border stays visible.
+            item.setPadding(dp(4), dp(13), dp(4), dp(13));
             item.setClipChildren(false);
-            RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(-1, tileSide + dp(54));
+            RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(-1, tileSide + dp(72));
             item.setLayoutParams(lp);
 
             FrameLayout button = new FrameLayout(activity);
@@ -321,8 +336,8 @@ final class AuroraAppsDrawer {
                 if (foreground instanceof AuroraOrbitRim)
                     ((AuroraOrbitRim) foreground).setFocused(focused);
                 v.animate().cancel();
-                v.animate().scaleX(focused ? 1.10f : 1f)
-                        .scaleY(focused ? 1.10f : 1f)
+                v.animate().scaleX(focused ? 1.055f : 1f)
+                        .scaleY(focused ? 1.055f : 1f)
                         .setDuration(focused ? 165 : 125).start();
                 tile.name.setTextColor(focused ? Color.WHITE : 0xFFD0C4DE);
             });
