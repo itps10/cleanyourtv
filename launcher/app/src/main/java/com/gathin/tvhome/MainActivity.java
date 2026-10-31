@@ -508,6 +508,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         cinematicWhiteFocus = cfg.cinematicWhiteFocus;
         heroArtAlpha = cfg.cinematicArt / 100f;
         if (cinematic) setUpCinematicShelf(cfg.cinematicScrim);
+        // Aurora 0.6: a discreet name and one-line description above the floating logo dock.
+        // Header pills (Inputs, Wi-Fi, Apps, Settings) are not altered.
+        if (singleRow && !cinematic) {
+            heroName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f);
+            heroName.setLetterSpacing(-0.02f);
+            heroMeta.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);
+            heroMeta.setTextColor(0xFFE4DAF8);
+            heroMeta.setVisibility(View.VISIBLE);
+            heroDots.setVisibility(View.GONE);
+        }
         // dock_title false: the name above the dock (and the cinematic lines under it) never shows; the glow
         // still follows the dock.
         if (!cfg.dockTitle) hero.setVisibility(View.GONE);
@@ -1892,9 +1902,40 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** The shelf's text for this dock app: its name and, on the cinematic shelf, "Last opened" and the dots. */
     private void fillHero(int position, String label) {
         heroName.setText(label);
-        if (!cinematic) return;
+        if (!cinematic) {
+            if (singleRow) {
+                heroMeta.setText(auroraDescription(adapter.packageAt(position)));
+                heroMeta.setVisibility(View.VISIBLE);
+            }
+            return;
+        }
         updateHeroMeta(position);
         updateHeroDots(position);
+    }
+
+    /** Custom single-line descriptions. Kept entirely offline and inexpensive on this TV. */
+    private static String auroraDescription(String pkg) {
+        if (pkg == null) return "Tudo o que você gosta, em um só lugar.";
+        switch (pkg) {
+            case "com.netflix.ninja":
+                return "Seu próximo filme favorito começa aqui.";
+            case "com.amazon.amazonvideo.livingroom":
+                return "Um mundo de histórias para descobrir.";
+            case "com.disney.disneyplus":
+                return "Histórias para viver e reviver.";
+            case "com.wbd.stream":
+            case "com.hbo.hbonow":
+            case "com.hbo.hbonow.tv":
+                return "Entre no universo das grandes histórias.";
+            case "com.google.android.youtube.tv":
+                return "Vídeos para todos os seus momentos.";
+            case "com.globo.globotv":
+                return "Conteúdos que fazem parte da sua vida.";
+            case "com.spotify.tv.android":
+                return "A trilha sonora perfeita para agora.";
+            default:
+                return "Abra e aproveite seu conteúdo favorito.";
+        }
     }
 
     // ---- cinematic shelf -------------------------------------------------------------------------
