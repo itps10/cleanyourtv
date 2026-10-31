@@ -1,24 +1,33 @@
-# https://editorconfig.org
-root = true
+name: Compilar CleanYourTV oficial (APK)
+on:
+  workflow_dispatch:
 
-[*]
-charset = utf-8
-end_of_line = lf
-insert_final_newline = true
-trim_trailing_whitespace = true
-indent_style = space
-indent_size = 4
+permissions:
+  contents: read
 
-[*.{bat,cmd}]
-end_of_line = crlf
-
-[*.{sh,json,yml,yaml}]
-indent_size = 2
-
-[launcher/gradlew]
-indent_size = 2
-
-# Two trailing spaces are a line break in Markdown.
-[*.md]
-trim_trailing_whitespace = false
-indent_size = 2
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter codigo
+        uses: actions/checkout@v4
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Instalar SDK 34
+        run: sdkmanager --install 'platforms;android-34' 'build-tools;34.0.0'
+      - name: Compilar APK
+        run: |
+          cd launcher
+          chmod +x gradlew
+          ./gradlew --no-daemon --console=plain assembleRelease
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CleanYourTV-APK
+          path: launcher/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
