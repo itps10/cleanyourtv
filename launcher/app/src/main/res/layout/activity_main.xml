@@ -216,16 +216,7 @@
                         android:fontFamily="@string/font_light"
                         android:letterSpacing="-0.04"
                         android:includeFontPadding="false" />
-
-                    <!-- Aurora Purple: seconds roll like a small clock dial, paused when Home is hidden. -->
-                    <com.gathin.tvhome.RollingSecondsView
-                        android:id="@+id/rollingSeconds"
-                        android:layout_width="40dp"
-                        android:layout_height="43dp"
-                        android:layout_gravity="bottom"
-                        android:layout_marginStart="2dp"
-                        android:layout_marginBottom="1dp"
-                        android:contentDescription="@null" />
+                    <!-- Aurora Luxe uses HH:mm only, without seconds. -->
 
                     <TextClock
                         android:id="@+id/ampm"
@@ -412,6 +403,63 @@
                 android:scrollbars="none"
                 android:descendantFocusability="afterDescendants" />
         </FrameLayout>
+    </LinearLayout>
+
+
+    <!-- Aurora Luxe: lightweight non-interactive YouTube Music quick panel.
+         Appears only when its home tile is focused; OK still opens the real app. -->
+    <LinearLayout
+        android:id="@+id/auroraMusicPeek"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="154dp"
+        android:layout_marginEnd="62dp"
+        android:padding="20dp"
+        android:orientation="vertical"
+        android:background="@drawable/aurora_music_peek"
+        android:elevation="8dp"
+        android:focusable="false"
+        android:clickable="false"
+        android:importantForAccessibility="no"
+        android:alpha="0"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="♫   YOUTUBE MUSIC"
+            android:textColor="#FFFF5D65"
+            android:fontFamily="@string/font_medium"
+            android:textSize="18sp"
+            android:letterSpacing="0.08" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Sua música, seu momento."
+            android:textColor="#FFF5EAFB"
+            android:textSize="18sp"
+            android:fontFamily="@string/font_medium" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Playlists e músicas favoritas na sua TV."
+            android:textColor="#B6E1D6EB"
+            android:textSize="13sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/aurora_music_action"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="9dp"
+            android:paddingBottom="9dp"
+            android:text="OK  •  Abrir música"
+            android:textColor="#FFFFFFFF"
+            android:textSize="13sp"
+            android:fontFamily="@string/font_medium" />
     </LinearLayout>
 
     <!-- The single floating glass highlight that springs between tiles. -->
