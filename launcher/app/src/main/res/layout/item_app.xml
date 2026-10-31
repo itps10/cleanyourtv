@@ -10,7 +10,7 @@
     <FrameLayout
         android:id="@+id/card"
         android:layout_width="180dp"
-        android:layout_height="101dp"
+        android:layout_height="180dp"
         android:layout_gravity="center_horizontal|top"
         android:background="@drawable/tile_bg"
         android:focusable="true"
@@ -20,7 +20,7 @@
             android:id="@+id/banner"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             android:contentDescription="@null" />
 
         <!-- Real app logo/icon, centered and fully visible on the chromatic card. -->
