@@ -218,6 +218,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final Map<String, String> appLabels, appBanners;
     /** Every app tile is its icon on a card tinted from that icon, never its banner (config.xml, uniform_tiles). */
     private final boolean uniformTiles;
+    /** Aurora: one transparent wordmark row over a photograph; separate from coloured uniform tiles. */
+    private final boolean auroraFloating;
     /** Packages drawn from their icon and name even when they have a banner (config.xml icon_tiles). */
     private final Set<String> iconTiles;
     private final List<Entry> items = new ArrayList<>();
@@ -248,6 +250,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.appLabels = cfg.appLabels;
         this.appBanners = cfg.appBanners;
         this.uniformTiles = cfg.uniformTiles;
+        this.auroraFloating = cfg.singleRow && !cfg.uniformTiles;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
@@ -300,7 +303,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // Aurora: curated, vector-drawn platform tiles supersede the app's original
             // icon whenever uniform_tiles is enabled. Unrecognised apps keep the native icon.
             // Module cards keep their own content and rendering rules.
-            if (uniformTiles && card == null) {
+            if (auroraFloating && card == null) {
+                banner = AuroraFloatingLogo.forApp(pkg, label);
+            } else if (uniformTiles && card == null) {
                 banner = AuroraBrandBanner.forPackage(pkg);
             } else {
                 banner = bundledBanner(appBanners.get(pkg));
@@ -493,7 +498,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.banner.setScaleY(focused && advancedEffects ? 1.035f : 1f);
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
-        h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
+        h.card.setBackground(auroraFloating ? null
+                : e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
         if (uniformTiles && e.banner == null) {
             if (e.backdrop == null) {
                 int[] branded = auroraPlatformBackdrop(e.pkg);
