@@ -21,7 +21,7 @@
   "live_tv_package": "com.mediatek.wwtv.tvcenter",
   "background_color": "#09071A",
   "wallpaper": true,
-  "wallpaper_dim": 8,
+  "wallpaper_dim": 5,
   "wallpaper_true_color": false,
   "single_row": true,
   "dock_row": true,
