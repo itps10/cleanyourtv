@@ -21,6 +21,31 @@ final class AuroraFloatingLogo extends Drawable {
     private final String label;
     private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
     private int alpha = 255;
+    private boolean focused;
+
+    /** White at rest; brand colour only for the tile holding remote focus. */
+    void setFocused(boolean value) {
+        if (focused == value) return;
+        focused = value;
+        invalidateSelf();
+    }
+
+    static int accentForPackage(String pkg) {
+        if (pkg == null) return 0xFFA66BFF;
+        switch (pkg) {
+            case "com.netflix.ninja": return 0xFFE50914;
+            case "com.amazon.amazonvideo.livingroom": return 0xFF00A8E1;
+            case "com.disney.disneyplus": return 0xFF6FA9FF;
+            case "com.wbd.stream":
+            case "com.hbo.hbonow":
+            case "com.hbo.hbonow.tv": return 0xFFB277FF;
+            case "com.google.android.youtube.tv": return 0xFFFF1736;
+            case "com.globo.globotv": return 0xFFFF7348;
+            case "com.spotify.tv.android": return 0xFF1ED760;
+            case "com.apple.atve.androidtv.appletv": return 0xFFC6DAF2;
+            default: return 0xFFA66BFF;
+        }
+    }
 
     private AuroraFloatingLogo(String packageName, String label) {
         this.packageName = packageName;
@@ -40,7 +65,7 @@ final class AuroraFloatingLogo extends Drawable {
         p.reset();
         p.setAntiAlias(true);
         p.setSubpixelText(true);
-        p.setColor(0xFFF9F7FF);
+        p.setColor(focused ? accentForPackage(packageName) : 0xFFF9F7FF);
         p.setAlpha(alpha);
         p.setStyle(Paint.Style.FILL);
         p.setTextAlign(Paint.Align.CENTER);
@@ -90,7 +115,7 @@ final class AuroraFloatingLogo extends Drawable {
         canvas.drawText(name, 200f, 137f, p);
 
         if ("com.amazon.amazonvideo.livingroom".equals(packageName)) {
-            p.setColor(0xFFE7EDFF);
+            p.setColor(focused ? accentForPackage(packageName) : 0xFFE7EDFF);
             p.setStyle(Paint.Style.STROKE);
             p.setStrokeWidth(4.5f);
             p.setStrokeCap(Paint.Cap.ROUND);
