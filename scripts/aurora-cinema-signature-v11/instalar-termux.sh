@@ -10,6 +10,7 @@ APK="${1:-$DOWNLOADS/aurora-cinema-v11.apk}"
 WALL="$DOWNLOADS/aurora_montanhas_lago_sem_interface.jpg"
 CONFIG="$DOWNLOADS/aurora-cinema-v11-config.json"
 CONFIG_URL="https://raw.githubusercontent.com/itps10/cleanyourtv/aurora-cinema-signature-v11/themes/aurora-floating-philco/config.json"
+RELEASE_BASE="https://github.com/itps10/cleanyourtv/releases/download/aurora-cinema-signature-v11/"
 
 command -v adb >/dev/null || { echo "ADB ausente. Execute: pkg install android-tools"; exit 1; }
 command -v curl >/dev/null || { echo "curl ausente. Execute: pkg install curl"; exit 1; }
@@ -28,10 +29,15 @@ fi
 
 if ! adb -s "$TV" shell pm path "$APP" | grep -q 'package:'; then
     if [ ! -s "$APK" ]; then
-        echo "APK não encontrado: $APK"
-        echo "Baixe o artefato Aurora-Cinema-v11-APK no GitHub."
-        echo "Extraia app-release.apk e renomeie para aurora-cinema-v11.apk."
-        exit 1
+        echo "Baixando APK direto da Release no GitHub..."
+        curl --fail --location --retry 3 --connect-timeout 20 \
+            --silent --show-error \
+            -o "$APK" "${RELEASE_BASE}aurora-cinema-v11.apk"
+        if [ ! -s "$APK" ]; then
+            echo "Não foi possível baixar o APK da Release."
+            echo "Acompanhe: https://github.com/itps10/cleanyourtv/releases/tag/aurora-cinema-signature-v11"
+            exit 1
+        fi
     fi
     echo "Instalando um pacote SEPARADO: $APP"
     adb -s "$TV" install -r "$APK"
@@ -62,6 +68,18 @@ if [ ! -s "$WALL" ]; then
     fi
 fi
 
+# A Release pública também disponibiliza um wallpaper estático, caso
+# a versão anterior não tenha a foto original. Não bloquear a instalação por isso.
+if [ ! -s "$WALL" ]; then
+    echo "Baixando wallpaper panorâmico diretamente do GitHub..."
+    if ! curl --fail --location --retry 3 --connect-timeout 20 \
+        --silent --show-error -o "$WALL" \
+        "${RELEASE_BASE}aurora_montanhas_lago_sem_interface.jpg"; then
+        rm -f "$WALL"
+        echo "Wallpaper indisponível; a paisagem integrada será utilizada."
+    fi
+fi
+
 if [ -s "$WALL" ]; then
     echo "Aplicando foto do lago e montanhas: $WALL"
     adb -s "$TV" push "$WALL" /data/local/tmp/aurora_cinema_v11_wallpaper.jpg >/dev/null
@@ -69,7 +87,7 @@ if [ -s "$WALL" ]; then
     adb -s "$TV" shell rm -f /data/local/tmp/aurora_cinema_v11_wallpaper.jpg
 else
     echo "A foto não está em Downloads nem na v1.0."
-    echo "Salve aurora_montanhas_lago_sem_interface.jpg em Downloads e execute este script novamente."
+    echo "A versão padrão inclui uma paisagem integrada, sem precisar copiar imagens."
     echo "O launcher usará temporariamente a paisagem integrada."
 fi
 
