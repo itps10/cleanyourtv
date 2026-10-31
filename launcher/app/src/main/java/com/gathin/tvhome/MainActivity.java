@@ -335,6 +335,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Tile menu's "Add to dock": the app waiting for a dock place in edit-dock mode, or null. */
     private String dockEditAppKey;
     private AppLibraryDialog appLibrary;
+    /** On Aurora, DOWN expands the entire screen into a vertical, 7-column catalogue. */
+    private AuroraAppsDrawer appsDrawer;
     private boolean appLibrarySelection;
     private boolean libraryOkOpens;
     private boolean libraryFocusPending;
@@ -1706,7 +1708,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     @Override
     public void onBackPressed() {
-        // Home screen: Back goes nowhere, unless back_opens_clock is on.
+        // On the expanded app grid, Back returns to the seven favourites.
+        if (appsDrawer != null && appsDrawer.isOpen()) {
+            appsDrawer.close();
+            return;
+        }
         if (backOpensClock) startActivity(new Intent(this, ClockActivity.class));
     }
 
@@ -1714,6 +1720,20 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     @Override
     public void onLibraryRequested() {
+        // The Aurora's Apps button and the DOWN key share one FULL-SCREEN,
+        // vertically scrollable grid. The legacy popup stays for other themes.
+        if (singleRow) {
+            if (appsDrawer != null && appsDrawer.isOpen()) return;
+            final int previous = Math.max(0, Math.min(lastFocused,
+                    Math.max(0, adapter.appCount() - 1)));
+            appsDrawer = new AuroraAppsDrawer(this, root, animations, () -> {
+                appsDrawer = null;
+                if (!isFinishing() && adapter != null && adapter.appCount() > 0) {
+                    grid.post(() -> focusTile(previous));
+                }
+            });
+            return;
+        }
         if (appLibrary != null) appLibrary.close();
         if (openPopup != null) openPopup.dismiss();
         libraryFocusPending = false;
@@ -2452,15 +2472,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int count = adapter.appCount();
         int target;
         if (singleRow) {
-            // Orbit: Up reaches Inputs/Wi-Fi/Apps/Settings; Down opens ALL launchable
-            // installed apps in the existing AppLibraryDialog without navigating
-            // away from Home or requiring the toolbar's Apps button.
+            // Orbit 1.4: UP keeps the toolbar; DOWN slides the full-screen
+            // seven-column VERTICAL drawer over the favourites and wallpaper.
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                if (appLibraryEnabled && appLibrary == null) {
+                if (appLibraryEnabled && (appsDrawer == null || !appsDrawer.isOpen())) {
                     orbitReturnPosition = position;
                     onLibraryRequested();
-                    libraryFromOrbitDown = true;
                     grid.playSoundEffect(SoundEffectConstants.NAVIGATION_DOWN);
                 }
                 return true;
