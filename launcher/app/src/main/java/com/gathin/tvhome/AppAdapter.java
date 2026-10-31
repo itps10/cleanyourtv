@@ -499,7 +499,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         if (auroraFloating) {
-            AuroraGlassCard tile = new AuroraGlassCard(AuroraFloatingLogo.accentForPackage(e.pkg));
+            AuroraGlassCard tile = new AuroraGlassCard(e.pkg);
             tile.setSelected(focused);
             h.card.setBackground(tile);
         } else {
