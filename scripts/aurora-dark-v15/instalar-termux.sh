@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Aurora Dark v1.5: preenche os circulos com os icones nativos da TV.
-# Pacote separado da v1.2, sem desinstalar nem trocar o HOME.
+# Pacote separado da v1.4, sem desinstalar nem trocar o HOME.
 set -Eeuo pipefail
 
 TV="${TV:-192.168.1.70:5555}"
@@ -42,7 +42,7 @@ curl --fail --location --retry 3 --silent --show-error "$CONFIG_URL" -o "$CONFIG
     echo "Config.json nao recebido."; exit 1
 }
 adb -s "$TV" push "$CONFIG" /data/local/tmp/aurora_dark_v15_config.json >/dev/null
-adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.grid.theme/config.json < /data/local/tmp/aurora_dark_v15_config.json'
+adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.dark.theme/config.json < /data/local/tmp/aurora_dark_v15_config.json'
 adb -s "$TV" shell rm -f /data/local/tmp/aurora_dark_v15_config.json
 
 # Keep the user's CURRENT dark Octocat-inspired wallpaper from Orbit v1.2.
@@ -73,7 +73,7 @@ fi
 if [ -s "$WALL" ]; then
     echo "Aplicando o mesmo wallpaper escuro da versão anterior..."
     adb -s "$TV" push "$WALL" /data/local/tmp/aurora_dark_v15_wallpaper.jpg >/dev/null
-    adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.grid.theme/wallpaper.jpg < /data/local/tmp/aurora_dark_v15_wallpaper.jpg'
+    adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.dark.theme/wallpaper.jpg < /data/local/tmp/aurora_dark_v15_wallpaper.jpg'
     adb -s "$TV" shell rm -f /data/local/tmp/aurora_dark_v15_wallpaper.jpg
 else
     echo "Wallpaper antigo nao encontrado; a paisagem integrada continua disponivel."
@@ -83,5 +83,5 @@ adb -s "$TV" shell am start -W -n "$APP/com.gathin.tvhome.MainActivity"
 
 echo "Pronto. Teste: Home = 7 favoritos menores; BAIXO = grade vertical com 8 apps por linha; Voltar = Inicio."
 echo "TV Aberta e Play Filmes tem icones novos; o Home original e todas as versoes antigas foram preservados."
-echo "Para tornar a v1.3 a tela Home, apos testar:"
+echo "Para tornar a v1.5 a tela Home, apos testar:"
 echo "adb shell cmd package set-home-activity --user 0 $APP/com.gathin.tvhome.MainActivity"
