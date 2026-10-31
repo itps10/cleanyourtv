@@ -491,7 +491,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE ? null : h.cardBackground);
         if (uniformTiles && e.banner == null) {
-            if (e.backdrop == null) e.backdrop = backdrop(e.icon, ambientColorAt(position));
+            if (e.backdrop == null) {
+                int[] branded = auroraPlatformBackdrop(e.pkg);
+                e.backdrop = branded != null ? branded : backdrop(e.icon, ambientColorAt(position));
+            }
             h.card.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, e.backdrop));
         }
         if (e.banner != null) {
@@ -732,6 +735,27 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         float w = weight[best];
         return Color.rgb((int) (sum[best][0] / w), (int) (sum[best][1] / w), (int) (sum[best][2] / w));
+    }
+
+    /**
+     * Aurora Purple: consistent dark editorial cards for the streaming platforms present on this PHILCO.
+     * Uses each provider's colour family rather than stretching a white square icon over a white tile.
+     * The original application icon is still used, so its trademark is not replaced or altered.
+     */
+    private static int[] auroraPlatformBackdrop(String pkg) {
+        if (pkg == null) return null;
+        switch (pkg) {
+            case "com.netflix.ninja": return new int[]{0xFF660B2D, 0xFF260510};
+            case "com.amazon.amazonvideo.livingroom": return new int[]{0xFF124C82, 0xFF081B3B};
+            case "com.disney.disneyplus": return new int[]{0xFF174C85, 0xFF090C35};
+            case "com.wbd.stream": return new int[]{0xFF6739A9, 0xFF251144};
+            case "com.google.android.youtube.tv": return new int[]{0xFF8C1E3B, 0xFF2C0A1A};
+            case "com.google.android.youtube.tvmusic": return new int[]{0xFF8C1E3B, 0xFF2C0A1A};
+            case "com.globo.globotv": return new int[]{0xFFB64E25, 0xFF55211C};
+            case "com.spotify.tv.android": return new int[]{0xFF176F54, 0xFF092B27};
+            case "com.boosteroidtv.streaming": return new int[]{0xFF3E397E, 0xFF141838};
+            default: return null;
+        }
     }
 
     /**
