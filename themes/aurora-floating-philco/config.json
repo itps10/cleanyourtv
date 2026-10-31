@@ -57,5 +57,7 @@
   "home_idle_clock_minutes": 8,
   "show_stats": false,
   "date_below_clock": false,
-  "sky_intensity": 0
+  "sky_intensity": 0,
+  "library_ok_opens": true,
+  "app_library_selection": false
 }
