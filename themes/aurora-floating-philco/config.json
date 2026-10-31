@@ -59,5 +59,6 @@
   "date_below_clock": false,
   "sky_intensity": 0,
   "library_ok_opens": true,
-  "app_library_selection": false
+  "app_library_selection": false,
+  "show_home_settings_shortcut": false
 }
