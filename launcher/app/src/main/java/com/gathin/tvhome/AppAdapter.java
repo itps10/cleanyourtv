@@ -311,6 +311,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 // a large, centered size. Never synthesize a text-only logo.
                 try {
                     banner = loadBanner(pm, ri);
+                    // Some PHILCO/TPV apps advertise zero-size or colour-only
+                    // banners, which caused large empty rectangles in v1.0.
+                    // Treat those as unavailable and use their native icon.
+                    if (banner != null && (banner.getIntrinsicWidth() < 160
+                            || banner.getIntrinsicHeight() < 80)) banner = null;
                 } catch (RuntimeException badVendorBanner) {
                     banner = null;
                 }
@@ -334,6 +339,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         icon = ctx.getDrawable(android.R.drawable.sym_def_app_icon);
                     }
                 }
+            }
+            if (auroraFloating && card == null) {
+                android.util.Log.i("AuroraArtwork",
+                        pkg + " banner=" + (banner != null) + " icon=" + (icon != null)
+                                + " name=" + label);
             }
             if (card != null) {
                 fresh.add(new Entry(Entry.CARD, label, component, banner, icon, card.caption, card.accent));
