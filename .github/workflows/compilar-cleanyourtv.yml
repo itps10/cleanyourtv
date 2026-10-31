@@ -12,6 +12,11 @@ on:
       - 'scripts/aurora-orbit-v12/**'
       - 'scripts/aurora-grid-v14/**'
 
+# When quick follow-up commits land, only the newest build publishes this Release.
+concurrency:
+  group: aurora-build-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
