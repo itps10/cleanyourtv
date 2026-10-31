@@ -1,12 +1,13 @@
-name: Compilar CleanYourTV oficial (APK)
+name: Compilar Aurora Floating (APK separado)
 on:
   workflow_dispatch:
   push:
-    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06]
+    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06, aurora-floating-sidebyside-v06]
     paths:
       - '.github/workflows/compilar-cleanyourtv.yml'
       - 'launcher/**'
       - 'themes/aurora-purple-philco/**'
+      - 'themes/aurora-floating-philco/**'
 
 permissions:
   contents: read
@@ -37,10 +38,10 @@ jobs:
         run: |
           cd launcher
           chmod +x gradlew
-          ./gradlew --no-daemon --console=plain assembleRelease
+          ./gradlew --no-daemon --console=plain -PlauncherApplicationId=com.gathin.tvhome.aurora assembleRelease
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: CleanYourTV-APK
+          name: Aurora-Floating-Sem-Conflito-APK
           path: launcher/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
