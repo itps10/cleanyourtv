@@ -36,18 +36,17 @@ final class AuroraOrbitRim extends Drawable {
 
     @Override public void draw(Canvas canvas) {
         Rect b = getBounds();
-        if (b.isEmpty()) return;
+        if (b.isEmpty() || !focused) return; // no purple/faint outline on idle icons
         float r = Math.min(b.width(), b.height()) * 0.5f;
         float x = b.exactCenterX(), y = b.exactCenterY();
         stroke.setShader(null);
-        stroke.setStrokeWidth(focused ? Math.max(3.0f, r * 0.065f)
-                : Math.max(1.2f, r * 0.025f));
-        stroke.setColor((focused ? 0xFF000000 : 0xB0000000) | (accent & 0xFFFFFF));
+        stroke.setStrokeWidth(Math.max(2.7f, r * 0.055f));
+        stroke.setColor(0xFF000000 | (accent & 0xFFFFFF));
         canvas.drawCircle(x, y, r - stroke.getStrokeWidth() * 0.62f, stroke);
 
         // A short glossy reflection on the upper edge: cheap, no bitmap blur.
         stroke.setStrokeWidth(Math.max(0.85f, r * 0.018f));
-        stroke.setColor(focused ? 0xD6FFFFFF : 0x68FFFFFF);
+        stroke.setColor(0xB9FFFFFF);
         float inset = Math.max(3f, r * 0.09f);
         arc.set(x-r+inset, y-r+inset, x+r-inset, y+r-inset);
         canvas.drawArc(arc, 206, 114, false, stroke);
