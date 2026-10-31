@@ -23,12 +23,17 @@
             android:scaleType="centerCrop"
             android:contentDescription="@null" />
 
+        <!-- Real app logo/icon, centered and fully visible on the chromatic card. -->
         <ImageView
             android:id="@+id/icon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginBottom="14dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp"
+            android:scaleType="fitCenter"
             android:visibility="gone"
             android:contentDescription="@null" />
 
