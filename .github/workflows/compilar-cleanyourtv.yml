@@ -65,7 +65,7 @@ jobs:
         if: github.ref == 'refs/heads/aurora-orbit-grid-v14'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: aurora-orbit-grid-v14
+          tag_name: aurora-orbit-grid-v14-final
           target_commitish: ${{ github.sha }}
           name: Aurora Grid v1.4 — download direto
           body: |
