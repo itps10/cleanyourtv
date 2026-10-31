@@ -2,7 +2,7 @@
 # Aurora Native v1.0 — sem remover os launchers anteriores.
 set -Eeuo pipefail
 TV="${TV:-192.168.1.70:5555}"
-APP="com.gathin.tvhome.aurora.native"
+APP="com.gathin.tvhome.aurora.nativev10"
 OLD_GOOGLE="com.google.android.tvlauncher"
 DOWNLOADS="$HOME/storage/downloads"
 APK="${1:-$DOWNLOADS/aurora-native-v10.apk}"
@@ -33,13 +33,13 @@ echo "Aplicando configuracao de logomarcas e iluminacao..."
 curl --fail --silent --show-error --location --retry 3 -o "$CONFIG" "$URL"
 [ -s "$CONFIG" ] || { echo "Nao foi possivel baixar o config.json"; exit 1; }
 adb -s "$TV" push "$CONFIG" /data/local/tmp/aurora-native-v10-config.json >/dev/null
-adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.native.theme/config.json < /data/local/tmp/aurora-native-v10-config.json'
+adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.nativev10.theme/config.json < /data/local/tmp/aurora-native-v10-config.json'
 adb -s "$TV" shell rm -f /data/local/tmp/aurora-native-v10-config.json
 
 if [ -s "$WALL" ]; then
     echo "Aplicando imagem de fundo das montanhas e lago..."
     adb -s "$TV" push "$WALL" /data/local/tmp/aurora-native-v10-wallpaper.jpg >/dev/null
-    adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.native.theme/wallpaper.jpg < /data/local/tmp/aurora-native-v10-wallpaper.jpg'
+    adb -s "$TV" shell 'content write --uri content://com.gathin.tvhome.aurora.nativev10.theme/wallpaper.jpg < /data/local/tmp/aurora-native-v10-wallpaper.jpg'
     adb -s "$TV" shell rm -f /data/local/tmp/aurora-native-v10-wallpaper.jpg
 else
     echo "Wallpaper JPG ainda nao esta na pasta Downloads."
