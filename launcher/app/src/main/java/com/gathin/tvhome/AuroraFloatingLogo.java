@@ -30,6 +30,27 @@ final class AuroraFloatingLogo extends Drawable {
         invalidateSelf();
     }
 
+    static boolean hasBrandColor(String pkg) {
+        if (pkg == null) return false;
+        switch (pkg) {
+            case "com.netflix.ninja":
+            case "com.amazon.amazonvideo.livingroom":
+            case "com.disney.disneyplus":
+            case "com.wbd.stream":
+            case "com.hbo.hbonow":
+            case "com.hbo.hbonow.tv":
+            case "com.google.android.youtube.tv":
+            case "com.google.android.youtube.tvmusic":
+            case "com.google.android.apps.youtube.music":
+            case "com.globo.globotv":
+            case "com.spotify.tv.android":
+            case "com.apple.atve.androidtv.appletv":
+                return true;
+            default:
+                return false;
+        }
+    }
+
     static int accentForPackage(String pkg) {
         if (pkg == null) return 0xFFA66BFF;
         switch (pkg) {
