@@ -304,30 +304,36 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // icon whenever uniform_tiles is enabled. Unrecognised apps keep the native icon.
             // Module cards keep their own content and rendering rules.
             if (auroraFloating && card == null) {
-                // Use Android's real brand artwork for EVERY installed application.
-                // Unlike synthetic wordmarks, this also works for apps added later.
-                // Keep it as a centered ImageView on the coloured Aurora card;
-                // a full-screen opaque TV banner would hide the card entirely.
-                banner = null;
+                // IMPORTANT: the former build called loadLogo(), then kept the
+                // 48dp legacy icon view. On TV firmware this often produces an
+                // empty/near-invisible logo. Fetch the actual TV banner when
+                // provided, otherwise display the *real installed app icon* at
+                // a large, centered size. Never synthesize a text-only logo.
+                try {
+                    banner = loadBanner(pm, ri);
+                } catch (RuntimeException badVendorBanner) {
+                    banner = null;
+                }
             } else if (uniformTiles && card == null) {
                 banner = AuroraBrandBanner.forPackage(pkg);
             } else {
                 banner = bundledBanner(appBanners.get(pkg));
                 if (banner == null) banner = iconTiles.contains(pkg) ? iconBanner(ri.loadIcon(pm)) : loadBanner(pm, ri);
             }
-            // The icon is only drawn (and sampled for the glow) when there is no banner, so a tile with a
-            // banner skips loading and decoding it.
-            Drawable icon = banner == null ? ri.loadIcon(pm) : null;
-            if (auroraFloating && card == null) {
-                // ApplicationInfo's logo can be a dedicated brand/wordmark.
-                // If not provided, the actual installed icon is guaranteed fallback.
+            Drawable icon = null;
+            if (banner == null) {
                 try {
-                    Drawable officialLogo = ri.activityInfo.loadLogo(pm);
-                    if (officialLogo != null) icon = officialLogo;
+                    icon = ri.loadIcon(pm);
                 } catch (RuntimeException ignored) {
-                    // A few vendor launchers expose broken logo resources.
+                    // Some apps have damaged activity-specific resources.
                 }
-                if (icon == null) icon = ri.loadIcon(pm);
+                if (icon == null) {
+                    try {
+                        icon = pm.getApplicationIcon(pkg);
+                    } catch (PackageManager.NameNotFoundException | RuntimeException ignored) {
+                        icon = ctx.getDrawable(android.R.drawable.sym_def_app_icon);
+                    }
+                }
             }
             if (card != null) {
                 fresh.add(new Entry(Entry.CARD, label, component, banner, icon, card.caption, card.accent));
@@ -458,7 +464,25 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         name.setLayoutParams(nameLp);
         // A sideways row would stretch a match_parent item across the whole screen: give it a grid column's width.
         if (singleRow) v.getLayoutParams().width = inner / dockSize;
-        if (uniformTiles) {
+        if (auroraFloating) {
+            // Previously the 7-column layout shrank an app's official icon to
+            // about 25dp. It could look like an empty card. Keep the real
+            // icon prominent and CENTERED regardless of column count.
+            ImageView icon = v.findViewById(R.id.icon);
+            FrameLayout.LayoutParams iconLp = (FrameLayout.LayoutParams) icon.getLayoutParams();
+            iconLp.width = Math.round(w * 0.58f);
+            iconLp.height = Math.round(h * 0.84f);
+            iconLp.gravity = android.view.Gravity.CENTER;
+            iconLp.bottomMargin = 0;
+            icon.setLayoutParams(iconLp);
+            icon.setPadding(0, 0, 0, 0);
+            icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+            ImageView banner = v.findViewById(R.id.banner);
+            banner.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            banner.setPadding(Math.round(w * 0.075f), Math.round(h * 0.13f),
+                    Math.round(w * 0.075f), Math.round(h * 0.13f));
+        } else if (uniformTiles) {
             // tvOS-style tile: a large centred mark, no caption inside the card.
             View icon = v.findViewById(R.id.icon);
             FrameLayout.LayoutParams iconLp = (FrameLayout.LayoutParams) icon.getLayoutParams();
@@ -540,7 +564,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else {
             h.banner.setImageDrawable(null);
             h.banner.setVisibility(View.GONE);
-            h.icon.setImageDrawable(e.icon);
+            // Always draw a real Android icon when no TV banner is available.
+            // The fallback drawable is non-null even for unusual vendor apps.
+            h.icon.setImageDrawable(e.icon != null ? e.icon
+                    : ctx.getDrawable(android.R.drawable.sym_def_app_icon));
             h.icon.setVisibility(View.VISIBLE);
             h.label.setText(e.label);
             h.label.setVisibility((uniformTiles || auroraFloating) ? View.GONE : View.VISIBLE);
