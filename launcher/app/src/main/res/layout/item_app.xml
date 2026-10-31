@@ -20,20 +20,17 @@
             android:id="@+id/banner"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleType="fitCenter"
+            android:scaleType="centerCrop"
             android:contentDescription="@null" />
 
-        <!-- Real app logo/icon, centered and fully visible on the chromatic card. -->
+        <!-- Aurora FullBleed: official installed app art fills and is clipped by the circular card. -->
         <ImageView
             android:id="@+id/icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:paddingTop="14dp"
-            android:paddingBottom="14dp"
-            android:scaleType="fitCenter"
+            android:padding="0dp"
+            android:scaleType="centerCrop"
             android:visibility="gone"
             android:contentDescription="@null" />
 
