@@ -1013,6 +1013,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (openLauncherSettingsIfAsked(intent)) return;
         if (openInputsIfAsked(intent)) return;
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
+        // Pressing HOME while browsing all apps always restores the minimal
+        // seven-favourite Home instead of leaving the expanded drawer visible.
+        if (appsDrawer != null && appsDrawer.isOpen()) {
+            appsDrawer.dismissForHome();
+            appsDrawer = null;
+        }
         if (gameDay != null && !stopped) gameDay.read();
         grid.scrollToPosition(0);
         lastFocused = 0;
