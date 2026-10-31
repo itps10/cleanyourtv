@@ -12,6 +12,13 @@
         android:layout_height="match_parent"
         android:importantForAccessibility="no" />
 
+    <!-- Aurora Luxe static violet mountain and lake wallpaper. No background video or GPU blur. -->
+    <com.gathin.tvhome.AuroraLandscapeView
+        android:id="@+id/auroraLandscape"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
     <!-- Cinematic top shelf (cinematic_home): the focused dock app's artwork, a few pixels across and
          stretched over the screen, which softens it like a blur without the cost of one. Hidden otherwise. -->
     <ImageView
