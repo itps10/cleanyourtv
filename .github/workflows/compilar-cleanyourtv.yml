@@ -2,7 +2,7 @@ name: Compilar CleanYourTV oficial (APK)
 on:
   workflow_dispatch:
   push:
-    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05]
+    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06]
     paths:
       - '.github/workflows/compilar-cleanyourtv.yml'
       - 'launcher/**'
