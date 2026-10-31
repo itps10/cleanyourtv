@@ -304,21 +304,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // icon whenever uniform_tiles is enabled. Unrecognised apps keep the native icon.
             // Module cards keep their own content and rendering rules.
             if (auroraFloating && card == null) {
-                // IMPORTANT: the former build called loadLogo(), then kept the
-                // 48dp legacy icon view. On TV firmware this often produces an
-                // empty/near-invisible logo. Fetch the actual TV banner when
-                // provided, otherwise display the *real installed app icon* at
-                // a large, centered size. Never synthesize a text-only logo.
-                try {
-                    banner = loadBanner(pm, ri);
-                    // Some PHILCO/TPV apps advertise zero-size or colour-only
-                    // banners, which caused large empty rectangles in v1.0.
-                    // Treat those as unavailable and use their native icon.
-                    if (banner != null && (banner.getIntrinsicWidth() < 160
-                            || banner.getIntrinsicHeight() < 80)) banner = null;
-                } catch (RuntimeException badVendorBanner) {
-                    banner = null;
-                }
+                // Orbit FullBleed: never nest a wide TV banner inside a coloured
+                // circle. Those banners are rectangular by definition.
+                // Instead use the actual installed app icon, full-bleed,
+                // cropped by the card's circular outline. The normal icon
+                // fallback below handles missing or damaged vendor icons.
+                banner = null;
             } else if (uniformTiles && card == null) {
                 banner = AuroraBrandBanner.forPackage(pkg);
             } else {
@@ -480,19 +471,18 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // icon prominent and CENTERED regardless of column count.
             ImageView icon = v.findViewById(R.id.icon);
             FrameLayout.LayoutParams iconLp = (FrameLayout.LayoutParams) icon.getLayoutParams();
-            // The official logo/icon occupies the circle, instead of a tiny emblem.
-            iconLp.width = Math.round(w * 0.84f);
-            iconLp.height = Math.round(h * 0.84f);
+            // Fill the ENTIRE circle, not a centred square on a second circle.
+            iconLp.width = w;
+            iconLp.height = h;
             iconLp.gravity = android.view.Gravity.CENTER;
             iconLp.bottomMargin = 0;
             icon.setLayoutParams(iconLp);
             icon.setPadding(0, 0, 0, 0);
-            icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
             ImageView banner = v.findViewById(R.id.banner);
-            banner.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            banner.setPadding(Math.round(w * 0.025f), Math.round(h * 0.20f),
-                    Math.round(w * 0.025f), Math.round(h * 0.20f));
+            banner.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            banner.setPadding(0, 0, 0, 0);
         } else if (uniformTiles) {
             // tvOS-style tile: a large centred mark, no caption inside the card.
             View icon = v.findViewById(R.id.icon);
@@ -549,10 +539,16 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         if (auroraFloating) {
-            AuroraGlassCard tile = new AuroraGlassCard(e.pkg, auroraAppColorAt(position));
+            int accent = auroraAppColorAt(position);
+            AuroraGlassCard tile = new AuroraGlassCard(e.pkg, accent);
             tile.setSelected(focused);
             h.card.setBackground(tile);
+            // Foreground stays visible over a full-sized opaque icon.
+            AuroraOrbitRim rim = new AuroraOrbitRim(accent);
+            rim.setFocused(focused);
+            ((FrameLayout) h.card).setForeground(rim);
         } else {
+            ((FrameLayout) h.card).setForeground(null);
             h.card.setBackground(e.banner != null && e.banner.getOpacity() == PixelFormat.OPAQUE
                     ? null : h.cardBackground);
         }
@@ -1062,6 +1058,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
                 if (view.getBackground() instanceof AuroraGlassCard) {
                     ((AuroraGlassCard) view.getBackground()).setSelected(focused);
+                }
+                Drawable foreground = ((FrameLayout) view).getForeground();
+                if (foreground instanceof AuroraOrbitRim) {
+                    ((AuroraOrbitRim) foreground).setFocused(focused);
                 }
                 view.animate().cancel();
                 banner.animate().cancel();
