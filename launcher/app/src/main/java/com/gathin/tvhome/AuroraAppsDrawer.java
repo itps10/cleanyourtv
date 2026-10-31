@@ -85,13 +85,17 @@ final class AuroraAppsDrawer {
         float density = activity.getResources().getDisplayMetrics().density;
         densityWidth = activity.getResources().getDisplayMetrics().widthPixels;
         int available = densityWidth - Math.round(100 * density);
-        tileSide = Math.min(Math.round(70 * density), Math.max(Math.round(42 * density),
-                available / COLS - Math.round(22 * density)));
+        // v1.7: smaller circles leave genuinely clear air around the selected rim.
+        // 56dp maximum instead of 70dp; the row still contains eight icons.
+        tileSide = Math.min(Math.round(56 * density), Math.max(Math.round(38 * density),
+                available / COLS - Math.round(27 * density)));
 
         panel = new FrameLayout(activity);
         GradientDrawable backdrop = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{0xF00B0D22, 0xF50C1029, 0xFB080A18});
         panel.setBackground(backdrop);
+        panel.setClipChildren(false);
+        panel.setClipToPadding(false);
         panel.setFocusable(true);
         panel.setClickable(true);
         panel.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
@@ -99,7 +103,11 @@ final class AuroraAppsDrawer {
 
         LinearLayout content = new LinearLayout(activity);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(46), dp(32), dp(46), dp(16));
+        // Prevent the selected circle in the first/last visible row from
+        // being cut by parent clipping or top-of-scroll alignment.
+        content.setClipChildren(false);
+        content.setClipToPadding(false);
+        content.setPadding(dp(46), dp(34), dp(46), dp(21));
         panel.addView(content, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -125,7 +133,7 @@ final class AuroraAppsDrawer {
         grid.setClipToPadding(false);
         grid.setHasFixedSize(true);
         // Room for the focus animation: otherwise the top row is cropped.
-        grid.setPadding(0, dp(22), 0, dp(34));
+        grid.setPadding(0, dp(44), 0, dp(55));
         grid.setItemAnimator(null);
         grid.setAdapter(adapter);
         content.addView(grid, new LinearLayout.LayoutParams(-1, 0, 1));
@@ -272,9 +280,9 @@ final class AuroraAppsDrawer {
             item.setOrientation(LinearLayout.VERTICAL);
             item.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
             // Inset selected circles from row edges so the border stays visible.
-            item.setPadding(dp(4), dp(13), dp(4), dp(13));
+            item.setPadding(dp(5), dp(24), dp(5), dp(18));
             item.setClipChildren(false);
-            RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(-1, tileSide + dp(72));
+            RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(-1, tileSide + dp(88));
             item.setLayoutParams(lp);
 
             FrameLayout button = new FrameLayout(activity);
@@ -336,9 +344,12 @@ final class AuroraAppsDrawer {
                 if (foreground instanceof AuroraOrbitRim)
                     ((AuroraOrbitRim) foreground).setFocused(focused);
                 v.animate().cancel();
-                v.animate().scaleX(focused ? 1.055f : 1f)
-                        .scaleY(focused ? 1.055f : 1f)
-                        .setDuration(focused ? 165 : 125).start();
+                // Tiny highlight; enlarging 5.5% could clip the upper edge on
+                // TPV firmware when RecyclerView scrolls a row to viewport top.
+                // Colour ring remains the primary, accessible focus indicator.
+                v.animate().scaleX(focused ? 1.02f : 1f)
+                        .scaleY(focused ? 1.02f : 1f)
+                        .setDuration(focused ? 145 : 115).start();
                 tile.name.setTextColor(focused ? Color.WHITE : 0xFFD0C4DE);
             });
             tile.button.setOnKeyListener((v, key, event) -> {
