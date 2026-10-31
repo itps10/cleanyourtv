@@ -118,7 +118,65 @@ final class AuroraFloatingLogo extends Drawable {
         p.setTextSize(sz);
         float measured = p.measureText(name);
         if (measured > 330f) p.setTextSize(sz * 330f / measured);
-        canvas.drawText(name, 200f, 137f, p);
+        if ("com.netflix.ninja".equals(packageName)) {
+            // A large original geometric monogram and a secondary label.
+            p.setTextSize(142f);
+            p.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+            canvas.drawText("N", 200f, 148f, p);
+            p.setTextSize(30f);
+            p.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+            canvas.drawText("NETFLIX", 200f, 186f, p);
+        } else if ("com.google.android.youtube.tv".equals(packageName)) {
+            // The play glyph belongs to the tile artwork; the brand still opens YouTube.
+            p.setColor(focused ? accentForPackage(packageName) : 0xFFE71C3D);
+            canvas.drawRoundRect(55f, 89f, 141f, 146f, 16f, 16f, p);
+            p.setColor(0xFFFFFFFF);
+            Path play = new Path();
+            play.moveTo(87f, 101f); play.lineTo(87f, 134f);
+            play.lineTo(117f, 117.5f); play.close();
+            canvas.drawPath(play, p);
+            p.setTextAlign(Paint.Align.LEFT);
+            p.setColor(focused ? accentForPackage(packageName) : 0xFFF9F7FF);
+            p.setTextSize(51f);
+            canvas.drawText("YouTube", 151f, 137f, p);
+        } else if ("com.google.android.youtube.tvmusic".equals(packageName)
+                || "com.google.android.apps.youtube.music".equals(packageName)) {
+            p.setColor(focused ? accentForPackage(packageName) : 0xFFF83F59);
+            canvas.drawCircle(81f, 118f, 39f, p);
+            p.setColor(0xFF1D0B29);
+            canvas.drawCircle(81f, 118f, 23f, p);
+            p.setColor(0xFFFFFFFF);
+            Path play = new Path();
+            play.moveTo(75f, 104f); play.lineTo(75f, 132f);
+            play.lineTo(98f, 118f); play.close();
+            canvas.drawPath(play, p);
+            p.setColor(focused ? accentForPackage(packageName) : 0xFFF9F7FF);
+            p.setTextAlign(Paint.Align.LEFT);
+            p.setTextSize(43f);
+            canvas.drawText("YouTube", 140f, 121f, p);
+            p.setTextSize(34f);
+            canvas.drawText("Music", 143f, 162f, p);
+        } else if ("com.spotify.tv.android".equals(packageName)) {
+            p.setColor(focused ? accentForPackage(packageName) : 0xFF25D366);
+            canvas.drawCircle(89f, 119f, 39f, p);
+            p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(5f);
+            p.setColor(0xFF082420);
+            for (int i = 0; i < 3; i++) {
+                Path line = new Path();
+                float yy = 107f + i * 11f;
+                line.moveTo(65f + i * 3, yy);
+                line.quadTo(90f, yy - 10f, 113f - i * 2, yy + 1f);
+                canvas.drawPath(line, p);
+            }
+            p.setStyle(Paint.Style.FILL);
+            p.setColor(focused ? accentForPackage(packageName) : 0xFFF9F7FF);
+            p.setTextAlign(Paint.Align.LEFT);
+            p.setTextSize(58f);
+            canvas.drawText("Spotify", 145f, 137f, p);
+        } else {
+            canvas.drawText(name, 200f, 137f, p);
+        }
 
         if ("com.amazon.amazonvideo.livingroom".equals(packageName)) {
             p.setColor(focused ? accentForPackage(packageName) : 0xFFE7EDFF);
