@@ -48,7 +48,7 @@ import java.util.concurrent.Executors;
  * redundant "Início" entries. No packages are uninstalled or disabled.
  */
 final class AuroraAppsDrawer {
-    private static final int COLS = 7;
+    private static final int COLS = 8;
     private static final ExecutorService LOADER = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Activity activity;
@@ -58,6 +58,9 @@ final class AuroraAppsDrawer {
     private final TextView countView;
     private final Runnable afterClose;
     private final AppGrid adapter = new AppGrid();
+    /** ~72 icon bitmaps maximum, reused when the user scrolls vertically. */
+    private final android.util.LruCache<String, AuroraIconSkin.Result> darkIconCache =
+            new android.util.LruCache<>(72);
     private boolean closed;
     private final int tileSide;
     private final int densityWidth;
@@ -82,7 +85,7 @@ final class AuroraAppsDrawer {
         float density = activity.getResources().getDisplayMetrics().density;
         densityWidth = activity.getResources().getDisplayMetrics().widthPixels;
         int available = densityWidth - Math.round(100 * density);
-        tileSide = Math.min(Math.round(92 * density), Math.max(Math.round(48 * density),
+        tileSide = Math.min(Math.round(82 * density), Math.max(Math.round(46 * density),
                 available / COLS - Math.round(16 * density)));
 
         panel = new FrameLayout(activity);
@@ -294,15 +297,21 @@ final class AuroraAppsDrawer {
         @Override public void onBindViewHolder(@NonNull Tile tile, int position) {
             App app = apps.get(position);
             tile.name.setText(app.label);
-            Drawable drawable;
-            try {
-                drawable = activity.getPackageManager().getApplicationIcon(app.packageName);
-            } catch (PackageManager.NameNotFoundException | RuntimeException ex) {
-                drawable = activity.getDrawable(android.R.drawable.sym_def_app_icon);
+            AuroraIconSkin.Result painted = darkIconCache.get(app.packageName);
+            if (painted == null) {
+                Drawable drawable;
+                try {
+                    drawable = activity.getPackageManager().getApplicationIcon(app.packageName);
+                } catch (PackageManager.NameNotFoundException | RuntimeException ex) {
+                    drawable = activity.getDrawable(android.R.drawable.sym_def_app_icon);
+                }
+                // TV Aberta and Play Filmes get clear TV and movie symbols.
+                // Other apps retain their native brand icon, with a dark icon skin.
+                painted = AuroraIconSkin.forApp(activity, app.packageName, app.label, drawable);
+                darkIconCache.put(app.packageName, painted);
             }
-            tile.image.setImageDrawable(drawable);
-            int accent = AuroraFloatingLogo.hasBrandColor(app.packageName)
-                    ? AuroraFloatingLogo.accentForPackage(app.packageName) : 0xFF9B77E9;
+            tile.image.setImageDrawable(painted.icon);
+            int accent = painted.accent;
             AuroraOrbitRim rim = new AuroraOrbitRim(accent);
             rim.setFocused(tile.button.hasFocus());
             tile.button.setForeground(rim);
