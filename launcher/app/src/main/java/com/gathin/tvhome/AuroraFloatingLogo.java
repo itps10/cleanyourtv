@@ -40,6 +40,8 @@ final class AuroraFloatingLogo extends Drawable {
             case "com.hbo.hbonow":
             case "com.hbo.hbonow.tv": return 0xFFB277FF;
             case "com.google.android.youtube.tv": return 0xFFFF1736;
+            case "com.google.android.youtube.tvmusic":
+            case "com.google.android.apps.youtube.music": return 0xFFFF3C60;
             case "com.globo.globotv": return 0xFFFF7348;
             case "com.spotify.tv.android": return 0xFF1ED760;
             case "com.apple.atve.androidtv.appletv": return 0xFFC6DAF2;
@@ -98,6 +100,10 @@ final class AuroraFloatingLogo extends Drawable {
         } else if ("com.google.android.youtube.tv".equals(packageName)) {
             name = "YouTube";
             sz = 61f;
+        } else if ("com.google.android.youtube.tvmusic".equals(packageName)
+                || "com.google.android.apps.youtube.music".equals(packageName)) {
+            name = "YouTube Music";
+            sz = 43f;
         } else if ("com.globo.globotv".equals(packageName)) {
             name = "globoplay";
             sz = 54f;
