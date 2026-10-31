@@ -10,7 +10,7 @@ DOWNLOADS="$HOME/storage/downloads"
 APK="$DOWNLOADS/aurora-grid-v14.apk"
 CONFIG="$DOWNLOADS/aurora-grid-v14-config.json"
 WALL="$DOWNLOADS/aurora-grid-v14-wallpaper.jpg"
-RELEASE_BASE="https://github.com/itps10/cleanyourtv/releases/download/aurora-orbit-grid-v14/"
+RELEASE_BASE="https://github.com/itps10/cleanyourtv/releases/download/aurora-orbit-grid-v14-final/"
 CONFIG_URL="https://raw.githubusercontent.com/itps10/cleanyourtv/aurora-orbit-grid-v14/themes/aurora-floating-philco/config.json"
 MINIMAL_URL="https://raw.githubusercontent.com/itps10/cleanyourtv/aurora-orbit-grid-v14/assets/wallpapers/orbit_minimal_sem_texto.jpg.gz.b64"
 
