@@ -484,6 +484,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // the theme's background, so launch looks the same.
         getWindow().setBackgroundDrawable(null);
         wallpaperPlayer = new WallpaperPlayer(this, root, cfg);
+        // When a real cinematic wallpaper is available, let WallpaperPlayer display
+        // it instead of drawing the built-in vector landscape over the image.
+        // If not installed, the lightweight fallback landscape remains visible.
+        View builtInAuroraLandscape = findViewById(R.id.auroraLandscape);
+        if (builtInAuroraLandscape != null) {
+            builtInAuroraLandscape.setVisibility(cfg.wallpaperEnabled && cfg.wallpaper != null
+                    ? View.GONE : View.VISIBLE);
+        }
         sky = findViewById(R.id.sky);
         sky.setIntensity(cfg.skyIntensity);
         glass = findViewById(R.id.glass);
