@@ -1,19 +1,19 @@
 {
   "locale": "pt-BR",
   "clock_format": "24",
-  "columns": 6,
+  "columns": 7,
   "dock_apps": [
     "com.netflix.ninja",
     "com.amazon.amazonvideo.livingroom",
     "com.disney.disneyplus",
     "com.wbd.stream",
     "com.google.android.youtube.tv",
-    "com.google.android.youtube.tvmusic"
+    "com.google.android.youtube.tvmusic",
+    "com.spotify.tv.android"
   ],
   "fill_dock": false,
   "library_apps": [
-    "com.globo.globotv",
-    "com.spotify.tv.android"
+    "com.globo.globotv"
   ],
   "hidden_apps": [
     "com.mediatek.wwtv.tvcenter"
