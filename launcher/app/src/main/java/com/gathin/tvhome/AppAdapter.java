@@ -509,6 +509,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
         if (e.banner != null) {
             h.banner.setImageDrawable(e.banner);
+            // A recycled tile must match its current focus state, not the previous app.
+            if (e.banner instanceof AuroraFloatingLogo) {
+                ((AuroraFloatingLogo) e.banner).setFocused(focused);
+            }
             h.banner.setVisibility(View.VISIBLE);
             h.icon.setVisibility(View.GONE);
             h.label.setVisibility(View.GONE);
@@ -982,6 +986,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             });
 
             card.setOnFocusChangeListener((view, focused) -> {
+                // The transparent wordmark changes from white to the app colour on D-pad focus.
+                Drawable art = banner.getDrawable();
+                if (art instanceof AuroraFloatingLogo) {
+                    ((AuroraFloatingLogo) art).setFocused(focused);
+                }
                 view.animate().cancel();
                 banner.animate().cancel();
                 name.animate().cancel();
