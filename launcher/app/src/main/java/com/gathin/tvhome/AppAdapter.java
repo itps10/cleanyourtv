@@ -304,7 +304,11 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // icon whenever uniform_tiles is enabled. Unrecognised apps keep the native icon.
             // Module cards keep their own content and rendering rules.
             if (auroraFloating && card == null) {
-                banner = AuroraFloatingLogo.forApp(pkg, label);
+                // Use Android's real brand artwork for EVERY installed application.
+                // Unlike synthetic wordmarks, this also works for apps added later.
+                // Keep it as a centered ImageView on the coloured Aurora card;
+                // a full-screen opaque TV banner would hide the card entirely.
+                banner = null;
             } else if (uniformTiles && card == null) {
                 banner = AuroraBrandBanner.forPackage(pkg);
             } else {
@@ -314,6 +318,17 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             // The icon is only drawn (and sampled for the glow) when there is no banner, so a tile with a
             // banner skips loading and decoding it.
             Drawable icon = banner == null ? ri.loadIcon(pm) : null;
+            if (auroraFloating && card == null) {
+                // ApplicationInfo's logo can be a dedicated brand/wordmark.
+                // If not provided, the actual installed icon is guaranteed fallback.
+                try {
+                    Drawable officialLogo = ri.activityInfo.loadLogo(pm);
+                    if (officialLogo != null) icon = officialLogo;
+                } catch (RuntimeException ignored) {
+                    // A few vendor launchers expose broken logo resources.
+                }
+                if (icon == null) icon = ri.loadIcon(pm);
+            }
             if (card != null) {
                 fresh.add(new Entry(Entry.CARD, label, component, banner, icon, card.caption, card.accent));
             } else {
@@ -499,7 +514,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // A fully opaque banner covers the whole card (centerCrop), so the card's own fill under it is drawn for
         // nothing on every frame; keep it under banners with transparent parts and under icon tiles.
         if (auroraFloating) {
-            AuroraGlassCard tile = new AuroraGlassCard(e.pkg);
+            AuroraGlassCard tile = new AuroraGlassCard(e.pkg, auroraAppColorAt(position));
             tile.setSelected(focused);
             h.card.setBackground(tile);
         } else {
@@ -528,7 +543,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             h.icon.setImageDrawable(e.icon);
             h.icon.setVisibility(View.VISIBLE);
             h.label.setText(e.label);
-            h.label.setVisibility(uniformTiles ? View.GONE : View.VISIBLE);
+            h.label.setVisibility((uniformTiles || auroraFloating) ? View.GONE : View.VISIBLE);
         }
         h.card.setOnClickListener(v -> launch(e));
         h.card.setOnLongClickListener(v -> {
@@ -694,6 +709,14 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (position < 0 || position >= items.size()) return null;
         Entry e = items.get(position);
         return e.banner != null ? e.banner : e.icon;
+    }
+
+    /** Known services use their brand palette; other installed apps use the real icon colour. */
+    int auroraAppColorAt(int position) {
+        String pkg = packageAt(position);
+        if (AuroraFloatingLogo.hasBrandColor(pkg))
+            return AuroraFloatingLogo.accentForPackage(pkg);
+        return ambientColorAt(position);
     }
 
     float focusScale() {
