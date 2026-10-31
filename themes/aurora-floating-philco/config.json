@@ -43,7 +43,7 @@
   "cinematic_home": false,
   "cinematic_art": 0,
   "cinematic_dots": false,
-  "ambient_glow": false,
+  "ambient_glow": true,
   "app_glow": true,
   "glow_style": "radial",
   "glass_style": "halo",
