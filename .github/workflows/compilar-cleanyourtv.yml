@@ -1,8 +1,8 @@
-name: Compilar Aurora Orbit v1.2 (APK independente)
+name: Compilar Aurora FullBleed v1.3 (APK independente)
 on:
   workflow_dispatch:
   push:
-    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06, aurora-floating-sidebyside-v06, aurora-chromatic-v07, aurora-luxe-v08, aurora-neon-cards-v09, aurora-native-logos-v10, aurora-cinema-signature-v11, aurora-orbit-v12]
+    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06, aurora-floating-sidebyside-v06, aurora-chromatic-v07, aurora-luxe-v08, aurora-neon-cards-v09, aurora-native-logos-v10, aurora-cinema-signature-v11, aurora-orbit-v12, aurora-orbit-fullbleed-v13]
     paths:
       - '.github/workflows/compilar-cleanyourtv.yml'
       - 'launcher/**'
@@ -40,33 +40,33 @@ jobs:
         run: |
           cd launcher
           chmod +x gradlew
-          ./gradlew --no-daemon --console=plain -PlauncherApplicationId=com.gathin.tvhome.aurora.orbit assembleRelease
+          ./gradlew --no-daemon --console=plain -PlauncherApplicationId=com.gathin.tvhome.aurora.fullbleed assembleRelease
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: Aurora-Orbit-v12-APK
+          name: Aurora-FullBleed-v13-APK
           path: launcher/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
       - name: Preparar download direto (APK e papel de parede)
-        if: github.ref == 'refs/heads/aurora-orbit-v12'
+        if: github.ref == 'refs/heads/aurora-orbit-fullbleed-v13'
         shell: bash
         run: |
-          cp launcher/app/build/outputs/apk/release/app-release.apk aurora-orbit-v12.apk
+          cp launcher/app/build/outputs/apk/release/app-release.apk aurora-fullbleed-v13.apk
           python3 -m pip install --quiet pillow
           python3 scripts/aurora-cinema-signature-v11/generate_wallpaper.py
-          ls -lh aurora-orbit-v12.apk aurora_montanhas_lago_sem_interface.jpg
+          ls -lh aurora-fullbleed-v13.apk aurora_montanhas_lago_sem_interface.jpg
       - name: Publicar release para curl no Termux
-        if: github.ref == 'refs/heads/aurora-orbit-v12'
+        if: github.ref == 'refs/heads/aurora-orbit-fullbleed-v13'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: aurora-orbit-v12
+          tag_name: aurora-orbit-fullbleed-v13
           target_commitish: ${{ github.sha }}
-          name: Aurora Orbit v1.2 — download direto
+          name: Aurora FullBleed v1.3 — download direto
           body: |
-            APK separado (com.gathin.tvhome.aurora.orbit) e wallpaper de montanhas e lago,
+            APK separado (com.gathin.tvhome.aurora.fullbleed) e wallpaper de montanhas e lago,
             sem widgets ou textos embutidos na imagem.
             Ambos podem ser baixados pelo Termux via HTTPS sem depender do ZIP do ChatGPT.
           files: |
-            aurora-orbit-v12.apk
+            aurora-fullbleed-v13.apk
             aurora_montanhas_lago_sem_interface.jpg
           fail_on_unmatched_files: true
