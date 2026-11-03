@@ -254,6 +254,7 @@ final class AuroraChampionsPanel {
         months.add(YearMonth.from(today.plusDays(9)).toString().replace("-",""));
         Exception lastError=null;
         int success=0;
+        int monthlySuccess=0;
 
         // Monthly boards supply the latest results and the coming fixtures.
         for(String month:months) {
@@ -261,6 +262,7 @@ final class AuroraChampionsPanel {
                 JSONObject board=loadJson(API+"?dates="+month+"&limit=250");
                 mergeEvents(board,eventsById);
                 success++;
+                monthlySuccess++;
             } catch(Exception error) {
                 lastError=error;
                 Log.w("AuroraUCL","Monthly board "+month+" unavailable: "+error.getMessage());
@@ -299,7 +301,7 @@ final class AuroraChampionsPanel {
 
         // If monthly boards were blocked but the daily endpoint works, recover
         // today's score and two recently finished and upcoming matchdays.
-        if(success==0 || eventsById.isEmpty()) {
+        if(monthlySuccess==0 || eventsById.isEmpty()) {
             LocalDate[] candidates={
                     today,today.minusDays(1),today.minusDays(7),today.minusDays(14),
                     today.plusDays(1),today.plusDays(7)
