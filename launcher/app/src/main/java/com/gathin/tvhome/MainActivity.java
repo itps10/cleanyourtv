@@ -150,6 +150,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextView heroMeta;
     /** Non-modal music quick-peek, visible only when the YouTube Music tile is focused. */
     private View auroraMusicPeek;
+    /** Non-interactive Champions League scores shown only when Max is focused. */
+    private AuroraChampionsPanel championsPanel;
     private LinearLayout heroDots;
     /** Cinematic top shelf (config.xml, cinematic_home): the focused dock app's artwork behind a larger shelf. */
     private boolean cinematic;
@@ -513,6 +515,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         hero.forceHasOverlappingRendering(false);
         heroMeta = findViewById(R.id.heroMeta);
         auroraMusicPeek = findViewById(R.id.auroraMusicPeek);
+        // Construct only for the lightweight Aurora single-row theme.
+        // Fetching is deferred until Max receives focus and Home is resumed.
+        if (singleRow) championsPanel = new AuroraChampionsPanel(this, root);
         heroDots = findViewById(R.id.heroDots);
         heroArt = findViewById(R.id.heroArt);
         cinematic = cfg.cinematicHome;
@@ -1096,6 +1101,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (gameDay != null) gameDay.start();
         sky.update();
         wallpaperPlayer.start();
+        if (championsPanel != null) {
+            championsPanel.resume();
+            // D-pad focus may already be on Max when Home resumes from another app.
+            handler.post(() -> {
+                if (resumed && championsPanel != null && adapter != null)
+                    championsPanel.focus(adapter.packageAt(lastFocused));
+            });
+        }
         handler.postDelayed(minuteTick, MINUTE_MS);
         if (festive && lamp != null) {
             lamp.start();
@@ -1263,6 +1276,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onPause() {
         super.onPause();
         resumed = false;
+        if (championsPanel != null) championsPanel.pause();
         // No UP reaches a paused Home, so a vendor-key hold it saw go down would still open its app later.
         // Only Home's own share is dropped: a key service that saw the same DOWN keeps its hold.
         RemoteKeys.release(this);
@@ -1338,6 +1352,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         RemoteKeys.release(this);
         cancelHoldOk();
         if (gameDay != null) gameDay.shutdown();
+        if (championsPanel != null) championsPanel.shutdown();
         unregisterReceiver(packageReceiver);
         wallpaperPlayer.close();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
@@ -1730,6 +1745,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // vertically scrollable grid. The legacy popup stays for other themes.
         if (singleRow) {
             if (appsDrawer != null && appsDrawer.isOpen()) return;
+            if (championsPanel != null) championsPanel.hide();
             final int previous = Math.max(0, Math.min(lastFocused,
                     Math.max(0, adapter.appCount() - 1)));
             appsDrawer = new AuroraAppsDrawer(this, root, animations, () -> {
@@ -1783,6 +1799,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         lastFocused = position;
         lastFocusedKey = adapter.keyAt(position);
         updateAuroraMusicPeek(position);
+        if (championsPanel != null)
+            championsPanel.focus(adapter.packageAt(position));
         // Focus restored before the first layout (cold start): the tile has no size yet, and the glass
         // would be sized to 2*pad. Run again once the tile is laid out.
         if (card.getWidth() == 0) {
