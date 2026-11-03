@@ -6,6 +6,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,17 +18,21 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import javax.net.ssl.HttpsURLConnection;
 import java.net.URL;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -194,7 +199,10 @@ final class AuroraChampionsPanel {
                 Snapshot loaded=null;
                 Exception failure=null;
                 try { loaded=download(); }
-                catch(Exception e) {failure=e;}
+                catch(Exception e) {
+                    failure=e;
+                    Log.e("AuroraUCL","Scores unavailable on this connection",e);
+                }
                 final Snapshot data=loaded;
                 final Exception error=failure;
                 main.post(() -> {
@@ -209,8 +217,12 @@ final class AuroraChampionsPanel {
                         timestamp.setText("Sem atualização • último dado " + HOUR.format(
                                 Instant.ofEpochMilli(fetchedAt)));
                     } else {
-                        showMessage(error==null?"Placar indisponível no momento."
-                                :"Sem dados da Champions. Verifique a internet.");
+                        // Distinguish remote server failures from loss of TV internet.
+                        showMessage("Placar da Champions temporariamente indisponível.");
+                        String reason=error==null?"Resposta vazia da fonte":
+                                error.getMessage();
+                        if(reason!=null&&reason.length()>67)reason=reason.substring(0,67)+"…";
+                        timestamp.setText(reason==null?"Sem resposta do provedor":reason);
                     }
                     schedule(data!=null&&data.live);
                 });
@@ -221,41 +233,113 @@ final class AuroraChampionsPanel {
         }
     }
 
+    /**
+     * ESPN stopped accepting YYYYMMDD-YYYYMMDD ranges in September 2026,
+     * returning HTTP 400. Month queries (yyyyMM) and daily queries remain
+     * supported. Get current-day/live first, then merge adjacent calendar
+     * months; deduplicate by event ID and prefer the live feed's status.
+     *
+     * Do not blame the TV connection when the upstream returns HTTP 400.
+     */
     private static Snapshot download() throws Exception {
-        // A single season-independent date range covers recent, live and soon.
-        // The site API is unofficial; fall back to today's board if it rejects ranges.
         LocalDate today=LocalDate.now(ZoneId.systemDefault());
-        String from=today.minusDays(17).format(QUERY);
-        String to=today.plusDays(9).format(QUERY);
-        JSONObject board=loadJson(API+"?dates="+from+"-"+to+"&limit=250");
-        JSONArray events=board.optJSONArray("events");
-        if(events==null||events.length()==0){
-            board=loadJson(API+"?dates="+today.format(QUERY));
-            events=board.optJSONArray("events");
+        long fromMs=today.minusDays(17).atStartOfDay(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
+        long toMs=today.plusDays(10).atStartOfDay(ZoneId.systemDefault())
+                .toInstant().toEpochMilli();
+        LinkedHashMap<String,JSONObject> eventsById=new LinkedHashMap<>();
+        LinkedHashSet<String> months=new LinkedHashSet<>();
+        months.add(YearMonth.from(today.minusDays(17)).toString().replace("-",""));
+        months.add(YearMonth.from(today).toString().replace("-",""));
+        months.add(YearMonth.from(today.plusDays(9)).toString().replace("-",""));
+        Exception lastError=null;
+        int success=0;
+
+        // Monthly boards supply the latest results and the coming fixtures.
+        for(String month:months) {
+            try {
+                JSONObject board=loadJson(API+"?dates="+month+"&limit=250");
+                mergeEvents(board,eventsById);
+                success++;
+            } catch(Exception error) {
+                lastError=error;
+                Log.w("AuroraUCL","Monthly board "+month+" unavailable: "+error.getMessage());
+            }
         }
+
+        // Always obtain a fresh live board: month requests can lag minute-by-minute.
+        boolean liveBoardOk=false;
+        try {
+            mergeEvents(loadJson(API),eventsById);
+            success++;
+            liveBoardOk=true;
+        } catch(Exception error) {
+            lastError=error;
+            Log.w("AuroraUCL","Live scoreboard unavailable: "+error.getMessage());
+        }
+
+        // Alternative ESPN host/API shape for a connected television whose
+        // default site API is blocked or briefly unavailable.
+        if(!liveBoardOk) {
+            try {
+                JSONObject cdn=loadJson(
+                        "https://cdn.espn.com/core/uefa.champions/scoreboard?xhr=1&date="
+                                +today.format(QUERY));
+                JSONObject content=cdn.optJSONObject("content");
+                JSONObject sb=content==null?null:content.optJSONObject("sbData");
+                if(sb==null)sb=cdn.optJSONObject("sbData");
+                if(sb==null)sb=cdn;
+                mergeEvents(sb,eventsById);
+                success++;
+            } catch(Exception error) {
+                lastError=error;
+                Log.w("AuroraUCL","CDN fallback unavailable: "+error.getMessage());
+            }
+        }
+
+        // If monthly boards were blocked but the daily endpoint works, recover
+        // today's score and two recently finished and upcoming matchdays.
+        if(success==0 || eventsById.isEmpty()) {
+            LocalDate[] candidates={
+                    today,today.minusDays(1),today.minusDays(7),today.minusDays(14),
+                    today.plusDays(1),today.plusDays(7)
+            };
+            for(LocalDate day:candidates) {
+                try {
+                    mergeEvents(loadJson(API+"?dates="+day.format(QUERY)),eventsById);
+                    success++;
+                } catch(Exception error) {
+                    lastError=error;
+                    Log.w("AuroraUCL","Daily board "+day+" unavailable: "+error.getMessage());
+                }
+                if(eventsById.size()>=15)break;
+            }
+        }
+        if(success==0) {
+            throw new IOException("Nenhuma fonte de placares respondeu"
+                    +(lastError==null?"":": "+lastError.getMessage()),lastError);
+        }
+
         Snapshot result=new Snapshot();
-        if(events==null)return result;
-        for(int i=0;i<events.length();i++) {
-            JSONObject event=events.optJSONObject(i);
-            if(event==null)continue;
+        for(JSONObject event:eventsById.values()) {
             JSONObject competition=event.optJSONArray("competitions")==null?null:
                     event.optJSONArray("competitions").optJSONObject(0);
             if(competition==null)continue;
             JSONArray competitors=competition.optJSONArray("competitors");
             if(competitors==null||competitors.length()<2)continue;
             String home=null,away=null,homeScore=null,awayScore=null;
-            for(int c=0;c<competitors.length();c++){
+            for(int c=0;c<competitors.length();c++) {
                 JSONObject competitor=competitors.optJSONObject(c);
                 if(competitor==null)continue;
                 JSONObject team=competitor.optJSONObject("team");
                 String name=team==null?"":team.optString("abbreviation","");
                 if(name.isEmpty())name=team==null?"?":team.optString("shortDisplayName",
                         team.optString("displayName","?"));
-                String score=score(competitor);
+                String value=score(competitor);
                 if("home".equalsIgnoreCase(competitor.optString("homeAway"))) {
-                    home=name;homeScore=score;
+                    home=name;homeScore=value;
                 } else if("away".equalsIgnoreCase(competitor.optString("homeAway"))) {
-                    away=name;awayScore=score;
+                    away=name;awayScore=value;
                 }
             }
             if(home==null||away==null)continue;
@@ -267,20 +351,39 @@ final class AuroraChampionsPanel {
             boolean complete=(type!=null&&type.optBoolean("completed",false))
                     ||"post".equals(state)||"STATUS_FINAL".equals(kind);
             boolean playing="in".equals(state)||kind.contains("IN_PROGRESS")
-                    ||kind.contains("HALFTIME");
+                    ||kind.contains("HALFTIME")||kind.contains("SECOND_HALF")
+                    ||kind.contains("FIRST_HALF");
             long date=0L;
             try {date=Instant.parse(event.optString("date")).toEpochMilli();}
             catch(Exception ignored) {}
+            // A month query can include many games outside the desired window.
+            if(date>0 && (date<fromMs||date>=toMs))continue;
             String detail=type==null?"":type.optString("shortDetail","");
             Match match=new Match(home,away,homeScore,awayScore,date,detail);
             if(playing) {result.playing.add(match);result.live=true;}
             else if(complete) result.finished.add(match);
             else result.upcoming.add(match);
         }
-        Collections.sort(result.playing,Comparator.comparingLong(m->m.date));
-        result.finished.sort((a,b)->Long.compare(b.date,a.date));
+        result.playing.sort(Comparator.comparingLong(m->m.date));
+        result.finished.sort((x,y)->Long.compare(y.date,x.date));
         result.upcoming.sort(Comparator.comparingLong(m->m.date));
+        Log.i("AuroraUCL","Scoreboard: live="+result.playing.size()
+                +", recent="+result.finished.size()+", upcoming="+result.upcoming.size()
+                +", successful sources="+success);
         return result;
+    }
+
+    private static void mergeEvents(JSONObject board,
+            LinkedHashMap<String,JSONObject> destination) {
+        JSONArray events=board.optJSONArray("events");
+        if(events==null)return;
+        for(int i=0;i<events.length();i++) {
+            JSONObject event=events.optJSONObject(i);
+            if(event==null)continue;
+            String id=event.optString("id","");
+            if(id.isEmpty())id=event.optString("date","")+"|"+event.optString("name","");
+            destination.put(id,event);
+        }
     }
 
     private static String score(JSONObject competitor) {
@@ -300,7 +403,8 @@ final class AuroraChampionsPanel {
         conn.setRequestProperty("Accept","application/json");
         conn.setRequestProperty("User-Agent","AuroraHome/1.8 (Android TV; public UCL scores)");
         try {
-            if(conn.getResponseCode()!=200)throw new java.io.IOException("HTTP "+conn.getResponseCode());
+            if(conn.getResponseCode()!=200)throw new IOException(
+                    "ESPN HTTP "+conn.getResponseCode()+" ("+conn.getURL().getHost()+")");
             try(InputStream input=conn.getInputStream();
                 InputStreamReader r=new InputStreamReader(input,java.nio.charset.StandardCharsets.UTF_8);
                 BufferedReader reader=new BufferedReader(r)) {
