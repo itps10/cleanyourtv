@@ -84,7 +84,7 @@ final class AuroraChampionsPanel {
         final float scale = activity.getResources().getDisplayMetrics().density;
         panel = new LinearLayout(activity);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(19),dp(17),dp(19),dp(17));
+        panel.setPadding(dp(22),dp(18),dp(22),dp(19));
         panel.setClickable(false);
         panel.setFocusable(false);
         panel.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
@@ -99,13 +99,13 @@ final class AuroraChampionsPanel {
 
         TextView title = label("⚽  UEFA CHAMPIONS LEAGUE",16,0xFFEBDBFF,true);
         title.setLetterSpacing(0.06f);
-        panel.addView(title,new LinearLayout.LayoutParams(-1,dp(30)));
+        panel.addView(title,new LinearLayout.LayoutParams(-1,dp(34)));
         timestamp = label("Ao vivo e últimos jogos • carregando…",12,0xFFCBBADA,false);
-        panel.addView(timestamp,new LinearLayout.LayoutParams(-1,dp(27)));
+        panel.addView(timestamp,new LinearLayout.LayoutParams(-1,dp(29)));
         View separator = new View(activity);
         separator.setBackgroundColor(0x496D5491);
         LinearLayout.LayoutParams sep = new LinearLayout.LayoutParams(-1,dp(1));
-        sep.bottomMargin=dp(9);
+        sep.bottomMargin=dp(12);
         panel.addView(separator,sep);
 
         matches = new LinearLayout(activity);
@@ -119,10 +119,14 @@ final class AuroraChampionsPanel {
         panel.addView(disclosure,note);
 
         // Place only on our Home, non-interactive, above the wallpaper/tiles.
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dp(387),-2,
+        // Align the panel with the right side's content column, keeping a
+        // consistent inset from the screen and not covering the seven circles.
+        int screen=activity.getResources().getDisplayMetrics().widthPixels;
+        int width=Math.min(dp(415),Math.max(dp(305),(int)(screen*0.365f)));
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width,-2,
                 Gravity.TOP | Gravity.RIGHT);
-        lp.topMargin=dp(157);
-        lp.rightMargin=dp(55);
+        lp.topMargin=dp(151);
+        lp.rightMargin=dp(48);
         root.addView(panel,lp);
         panel.setVisibility(View.GONE);
     }
@@ -446,23 +450,39 @@ final class AuroraChampionsPanel {
     private int section(String title,List<Match> events,int limit,int tint,int kind) {
         if(limit<=0)return 0;
         TextView header=label(title,11,tint,true);
-        LinearLayout.LayoutParams head=new LinearLayout.LayoutParams(-1,dp(26));
-        head.topMargin=dp(2);
+        LinearLayout.LayoutParams head=new LinearLayout.LayoutParams(-1,dp(28));
+        head.topMargin=dp(6);
+        head.bottomMargin=dp(3);
         matches.addView(header,head);
         int total=Math.min(limit,events.size());
-        for(int i=0;i<total;i++){
+        for(int i=0;i<total;i++) {
             Match m=events.get(i);
-            String line;
-            if(kind==2) {
-                line=(m.date>0?DAY_HOUR.format(Instant.ofEpochMilli(m.date)):"A definir")
-                        +"  ·  "+m.home+" × "+m.away;
-            } else {
-                String result=m.home+"  "+m.homeScore+" – "+m.awayScore+"  "+m.away;
-                line=kind==0?("● "+(m.detail.isEmpty()?"AO VIVO":m.detail)
-                        +"  ·  "+result):result;
+            // Predictable two-column scorecard: names always left, goals/time
+            // always right, regardless of home/away name length or match status.
+            LinearLayout line=new LinearLayout(activity);
+            line.setOrientation(LinearLayout.HORIZONTAL);
+            line.setGravity(Gravity.CENTER_VERTICAL);
+            line.setPadding(dp(2),0,dp(2),0);
+
+            TextView opponents=label(m.home+"  ×  "+m.away,14,0xFFF2E9FE,kind==0);
+            LinearLayout.LayoutParams names=new LinearLayout.LayoutParams(0,dp(33),1f);
+            names.rightMargin=dp(12);
+            line.addView(opponents,names);
+
+            String result=kind==2
+                    ? (m.date>0 ? DAY_HOUR.format(Instant.ofEpochMilli(m.date)):"A definir")
+                    : m.homeScore+" – "+m.awayScore;
+            if(kind==0 && !m.detail.isEmpty()) result=m.detail+"  "+result;
+            TextView value=label(result,14,kind==0?0xFFFF8EA6:0xFFECE2FF,true);
+            value.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
+            line.addView(value,new LinearLayout.LayoutParams(-2,dp(33)));
+
+            matches.addView(line,new LinearLayout.LayoutParams(-1,dp(34)));
+            if(i+1<total) {
+                View rule=new View(activity);
+                rule.setBackgroundColor(0x243F315B);
+                matches.addView(rule,new LinearLayout.LayoutParams(-1,dp(1)));
             }
-            TextView text=label(line,14,0xFFF4EBFF,kind==0);
-            matches.addView(text,new LinearLayout.LayoutParams(-1,dp(29)));
         }
         return total;
     }
