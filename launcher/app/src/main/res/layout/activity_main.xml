@@ -357,6 +357,15 @@
                     android:drawableStart="@drawable/ic_wifi"
                     android:nextFocusDown="@+id/grid" />
 
+                <!-- Aurora: Bluetooth lives immediately after Wi-Fi for remote-control access. -->
+                <TextView
+                    android:id="@+id/btnBluetooth"
+                    style="@style/TopButtonIcon"
+                    android:drawableStart="@drawable/ic_bluetooth"
+                    android:contentDescription="Bluetooth"
+                    android:visibility="gone"
+                    android:nextFocusDown="@+id/grid" />
+
                 <TextView
                     android:id="@+id/btnVpn"
                     style="@style/TopButton"
