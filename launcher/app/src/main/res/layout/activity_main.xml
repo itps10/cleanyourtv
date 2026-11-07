@@ -347,6 +347,16 @@
                     android:drawableStart="@drawable/ic_input"
                     android:nextFocusDown="@+id/grid" />
 
+                <!-- PS4 shortcut: directly selects HDMI 4, before Wi-Fi. -->
+                <TextView
+                    android:id="@+id/btnPs4"
+                    style="@style/TopButton"
+                    android:text="PS4"
+                    android:contentDescription="PS4 • entrada HDMI 4"
+                    android:drawableStart="@drawable/ic_gamepad_ps4"
+                    android:visibility="gone"
+                    android:nextFocusDown="@+id/grid" />
+
                 <TextView
                     android:id="@+id/btnWifi"
                     style="@style/TopButton"
