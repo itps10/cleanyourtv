@@ -1,8 +1,8 @@
-name: Compilar Aurora Champions Fix v1.9 (APK independente)
+name: Compilar Aurora Champions BT v2.0 (APK independente)
 on:
   workflow_dispatch:
   push:
-    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06, aurora-floating-sidebyside-v06, aurora-chromatic-v07, aurora-luxe-v08, aurora-neon-cards-v09, aurora-native-logos-v10, aurora-cinema-signature-v11, aurora-orbit-v12, aurora-orbit-fullbleed-v13, aurora-orbit-grid-v14, aurora-dark-icons-v15, aurora-dark-sharp-v16, aurora-dark-safe-zoom-v17, aurora-max-champions-v18, aurora-champions-feed-v19]
+    branches: [main, aurora-purple-philco-v04, aurora-purple-philco-v05, aurora-purple-philco-v06, aurora-floating-sidebyside-v06, aurora-chromatic-v07, aurora-luxe-v08, aurora-neon-cards-v09, aurora-native-logos-v10, aurora-cinema-signature-v11, aurora-orbit-v12, aurora-orbit-fullbleed-v13, aurora-orbit-grid-v14, aurora-dark-icons-v15, aurora-dark-sharp-v16, aurora-dark-safe-zoom-v17, aurora-max-champions-v18, aurora-champions-feed-v19, aurora-champions-bluetooth-v20]
     paths:
       - '.github/workflows/compilar-cleanyourtv.yml'
       - 'launcher/**'
@@ -16,6 +16,7 @@ on:
       - 'scripts/aurora-compact-v17/**'
       - 'scripts/aurora-champions-v18/**'
       - 'scripts/aurora-champions-v19/**'
+      - 'scripts/aurora-champions-v20/**'
 
 # When quick follow-up commits land, only the newest build publishes this Release.
 concurrency:
@@ -37,7 +38,7 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Verificar a fonte de placares da Champions (informativo)
-        if: github.ref == 'refs/heads/aurora-champions-feed-v19'
+        if: github.ref == 'refs/heads/aurora-champions-bluetooth-v20'
         continue-on-error: true
         run: python3 scripts/aurora-champions-v19/verificar-espn.py
       - name: Instalar Android SDK 34
@@ -55,33 +56,33 @@ jobs:
         run: |
           cd launcher
           chmod +x gradlew
-          ./gradlew --no-daemon --console=plain -PlauncherApplicationId=com.gathin.tvhome.aurora.championsfix assembleRelease
+          ./gradlew --no-daemon --console=plain -PlauncherApplicationId=com.gathin.tvhome.aurora.championsbt assembleRelease
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: Aurora-ChampionsFix-v19-APK
+          name: Aurora-ChampionsBT-v20-APK
           path: launcher/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
       - name: Preparar download direto (APK e papel de parede)
-        if: github.ref == 'refs/heads/aurora-champions-feed-v19'
+        if: github.ref == 'refs/heads/aurora-champions-bluetooth-v20'
         shell: bash
         run: |
-          cp launcher/app/build/outputs/apk/release/app-release.apk aurora-champions-v19.apk
+          cp launcher/app/build/outputs/apk/release/app-release.apk aurora-champions-bt-v20.apk
           python3 -m pip install --quiet pillow
           python3 scripts/aurora-cinema-signature-v11/generate_wallpaper.py
-          ls -lh aurora-champions-v19.apk aurora_montanhas_lago_sem_interface.jpg
+          ls -lh aurora-champions-bt-v20.apk aurora_montanhas_lago_sem_interface.jpg
       - name: Publicar release para curl no Termux
-        if: github.ref == 'refs/heads/aurora-champions-feed-v19'
+        if: github.ref == 'refs/heads/aurora-champions-bluetooth-v20'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: aurora-champions-feed-v19-final
+          tag_name: aurora-champions-bluetooth-v20-final
           target_commitish: ${{ github.sha }}
-          name: Aurora Champions Fix v1.9 — download direto
+          name: Aurora Champions BT v2.0 — download direto
           body: |
-            APK separado (com.gathin.tvhome.aurora.championsfix) e wallpaper de montanhas e lago,
+            APK separado (com.gathin.tvhome.aurora.championsbt) e wallpaper de montanhas e lago,
             sem widgets ou textos embutidos na imagem.
             Ambos podem ser baixados pelo Termux via HTTPS sem depender do ZIP do ChatGPT.
           files: |
-            aurora-champions-v19.apk
+            aurora-champions-bt-v20.apk
             aurora_montanhas_lago_sem_interface.jpg
           fail_on_unmatched_files: true
