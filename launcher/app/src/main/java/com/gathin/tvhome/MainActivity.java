@@ -810,6 +810,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
 
         btnInputs = findViewById(R.id.btnInputs);
+        TextView btnPs4 = findViewById(R.id.btnPs4);
+        btnPs4.setVisibility(singleRow && !cfg.topMenu ? View.VISIBLE : View.GONE);
+        btnPs4.setOnClickListener(v -> openPs4Hdmi4());
+        btnPs4.setOnLongClickListener(v -> {
+            showPs4HdmiPicker(); // Change/repair HDMI association without changing other ports.
+            return true;
+        });
         View btnSettings = findViewById(R.id.btnSettings);
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> openNetworkPill());
@@ -905,6 +912,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == rightButton;
         };
         btnInputs.setOnKeyListener(pillKeys);
+        btnPs4.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         btnBluetooth.setOnKeyListener(pillKeys);
         btnVpn.setOnKeyListener(pillKeys);
@@ -913,7 +921,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnLibraryTop.setOnKeyListener(pillKeys);
         for (View button : topAppButtons) button.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            List<View> pills = new ArrayList<>(Arrays.asList(btnInputs, btnWifi, btnBluetooth, btnVpn, btnReorder, btnLibraryTop, btnSettings));
+            List<View> pills = new ArrayList<>(Arrays.asList(btnInputs, btnPs4, btnWifi, btnBluetooth, btnVpn, btnReorder, btnLibraryTop, btnSettings));
             pills.addAll(topAppButtons);
             for (View button : pills) {
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
@@ -3408,6 +3416,119 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         }
         open(inputActionIntent().setDataAndType(uri, "vnd.android.cursor.item/channel"));
+    }
+
+    // ---- Aurora PS4 HDMI 4 quick shortcut --------------------------------------------------------
+    // Use the same input-opening pathway as the existing Entradas menu. Never
+    // guess that a hardware ID such as HW4 means HDMI port 4: vendor hardware
+    // numbering and HDMI labels are not necessarily the same.
+    private static final String PS4_HDMI_PREFS = "aurora_ps4_shortcut";
+    private static final String PS4_HDMI_ID = "hdmi4_input_id";
+
+    private static boolean isPs4Hdmi4Label(String value) {
+        if (value == null) return false;
+        String name = value.trim();
+        if (name.equalsIgnoreCase("PS4") || name.equalsIgnoreCase("PlayStation 4")) return true;
+        if (name.matches("(?i)^0?4$")) return true; // A TYPE_HDMI input labelled simply "4".
+        return java.util.regex.Pattern.compile(
+                "(?i)(?<![A-Z0-9])HDMI[\\s_:#-]*0?4(?![0-9])")
+                .matcher(name).find();
+    }
+
+    private List<TvInputInfo> availablePs4HdmiPorts() {
+        TvInputManager tim = (TvInputManager) getSystemService(TV_INPUT_SERVICE);
+        if (tim == null) return Collections.emptyList();
+        List<TvInputInfo> found = new ArrayList<>();
+        try {
+            for (TvInputInfo info : tim.getTvInputList()) {
+                if (info.getType() != TvInputInfo.TYPE_HDMI || !info.isPassthroughInput()
+                        || info.isHidden(this)) continue;
+                if (Integer.valueOf(-1).equals(mappedSource(info.getId()))) continue;
+                // CEC child inputs are grouped under their HDMI port. Target
+                // parent hardware inputs to switch the HDMI connector itself.
+                if (info.getParentId() != null) continue;
+                found.add(info);
+            }
+        } catch (RuntimeException ignored) {
+            // TV input service not available yet; show native inputs selector.
+        }
+        return found;
+    }
+
+    private boolean looksLikeHdmi4(TvInputInfo info) {
+        try {
+            CharSequence base = info.loadLabel(this);
+            CharSequence custom = info.loadCustomLabel(this);
+            return isPs4Hdmi4Label(base == null ? null : base.toString())
+                    || isPs4Hdmi4Label(custom == null ? null : custom.toString());
+        } catch (RuntimeException ignored) {
+            return false;
+        }
+    }
+
+    private void openPs4Hdmi4() {
+        List<TvInputInfo> hdmi = availablePs4HdmiPorts();
+        String saved = getSharedPreferences(PS4_HDMI_PREFS, MODE_PRIVATE)
+                .getString(PS4_HDMI_ID, "");
+        if (!saved.isEmpty()) {
+            for (TvInputInfo info : hdmi) {
+                if (saved.equals(info.getId())) {
+                    openInput(saved);
+                    return;
+                }
+            }
+            // Hardware IDs can change after a TV firmware update.
+            getSharedPreferences(PS4_HDMI_PREFS, MODE_PRIVATE)
+                    .edit().remove(PS4_HDMI_ID).apply();
+        }
+        // Resolve the connector from the TV's actual HDMI 4 label. Do not
+        // assume HW4, nor fall back to the wrong HDMI port.
+        for (TvInputInfo info : hdmi) {
+            if (!looksLikeHdmi4(info)) continue;
+            String id = info.getId();
+            getSharedPreferences(PS4_HDMI_PREFS, MODE_PRIVATE)
+                    .edit().putString(PS4_HDMI_ID, id).apply();
+            openInput(id);
+            return;
+        }
+        // Some PHILCO builds report only HW IDs with no port names. Let the
+        // user pick the correct physical input ONCE and remember its real ID.
+        showPs4HdmiPicker();
+    }
+
+    private void showPs4HdmiPicker() {
+        List<TvInputInfo> hdmi = availablePs4HdmiPorts();
+        if (hdmi.isEmpty()) {
+            Toast.makeText(this, "HDMI 4 não identificada; selecione em Entradas.",
+                    Toast.LENGTH_LONG).show();
+            showInputs();
+            return;
+        }
+        View anchor = findViewById(R.id.btnPs4);
+        View panel = getLayoutInflater().inflate(R.layout.popup_inputs, root, false);
+        LinearLayout rows = panel.findViewById(R.id.rows);
+        PopupWindow popup = glassPopup(panel, (int) (270 * density));
+        View first = null;
+        for (TvInputInfo info : hdmi) {
+            CharSequence base = info.loadLabel(this);
+            CharSequence custom = InputNames.tidy(info.loadCustomLabel(this));
+            String label = base == null ? info.getId() : base.toString();
+            if (custom != null && custom.length() > 0 && !custom.toString().equals(label))
+                label = custom + " · " + label;
+            String id = info.getId();
+            View row = addInputRow(rows, popup, R.drawable.ic_gamepad_ps4,
+                    label + (looksLikeHdmi4(info) ? "  ·  HDMI 4" : ""), -1, () -> {
+                        getSharedPreferences(PS4_HDMI_PREFS, MODE_PRIVATE)
+                                .edit().putString(PS4_HDMI_ID, id).apply();
+                        openInput(id);
+                    });
+            if (first == null) first = row;
+        }
+        if (first != null) {
+            dropIn(popup, panel, anchor,
+                    getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.START : Gravity.END);
+            first.requestFocus();
+        }
     }
 
     /** `input_action` as an intent: an explicit component when it reads "package/.Activity", else an action. */
