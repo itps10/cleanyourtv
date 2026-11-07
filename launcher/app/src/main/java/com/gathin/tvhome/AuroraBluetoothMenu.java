@@ -44,7 +44,6 @@ final class AuroraBluetoothMenu {
     private final Activity activity;
     private final TextView button;
     private final BluetoothAdapter adapter;
-    private final int dp;
     private PopupWindow popup;
     private boolean listening;
     private boolean closed;
@@ -60,7 +59,6 @@ final class AuroraBluetoothMenu {
     AuroraBluetoothMenu(Activity activity, TextView button, boolean visible) {
         this.activity = activity;
         this.button = button;
-        this.dp = Math.round(activity.getResources().getDisplayMetrics().density * 1f);
         BluetoothAdapter found = null;
         try {
             BluetoothManager manager=(BluetoothManager)activity.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -119,7 +117,7 @@ final class AuroraBluetoothMenu {
     private boolean enabled() {
         if(adapter==null || !permitted())return false;
         try { return adapter.isEnabled(); }
-        catch(SecurityException | RuntimeException ignored) {return false;}
+        catch(RuntimeException ignored) {return false;}
     }
 
     private void updateButton() {
@@ -161,7 +159,7 @@ final class AuroraBluetoothMenu {
                     openDeviceSettings();
                 }
             }
-        } catch(SecurityException | RuntimeException error) {
+        } catch(RuntimeException error) {
             openDeviceSettings();
         }
         button.postDelayed(this::updateButton,1100);
@@ -240,7 +238,7 @@ final class AuroraBluetoothMenu {
                         addRow(rows,"Nenhum dispositivo pareado","Adicionar dispositivo",
                                 this::openDeviceSettings);
                     }
-                } catch(SecurityException | RuntimeException ignored) {
+                } catch(RuntimeException ignored) {
                     addRow(rows,"Dispositivos Bluetooth","Ver nas configurações",
                             this::openDeviceSettings);
                 }
